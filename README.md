@@ -29,7 +29,7 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-### 3. Instalar dependencias
+### 3. Instalar dependências
 
 
 ```
@@ -52,11 +52,11 @@ Para iniciar o servidor FastAPI, rode o comando:
 uvicorn app.main:app --reload
 ```
 
-O API estará disponivel em http://127.0.0.1:8000.
+O API estará disponível em ``http://127.0.0.1:8000``.
 
 ## Database Migrations
 
-Quando fizer auteções nos modelos do SQLAlchemy, crie as novas migrações usando o Alembic:  
+Quando fizer alterações nos modelos do SQLAlchemy, crie as novas migrações usando o Alembic:  
 
 ```
 alembic revision --autogenerate -m "Your migration message"
