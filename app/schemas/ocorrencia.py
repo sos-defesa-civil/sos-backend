@@ -3,14 +3,22 @@ from typing import Optional
 from datetime import datetime
 
 class OcorrenciaBase(BaseModel):
-    user_id: int
+    id: int
     tipo: str
     descricao: str
     data_registro: datetime
-    ultima_atualizacao: datetime
+    ultima_atualizacao: Optional[datetime]
+    user_id: int
+
+    class Config:
+        orm_mode = True
 
 class OcorrenciaCreate(OcorrenciaBase):
     pass
+
+class OcorrenciaUpdate(OcorrenciaBase):
+    pass
+
 
 class OcorrenciaResponse(OcorrenciaBase):
     id: int
