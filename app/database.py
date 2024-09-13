@@ -9,4 +9,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 from app.models.usuario import Usuario
+from app.models.usuario import Cidadao
+from app.models.usuario import Funcionario_Defesa_Civil
 from app.models.ocorrencia import Ocorrencia
+from app.models.curtida import Curtida
+from app.models.feedback import Feedback
+from app.models.midia import Midia

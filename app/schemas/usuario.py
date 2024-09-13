@@ -13,30 +13,24 @@ class UsuarioBase(BaseModel):
     class Config:
         orm_mode = True
 
-class UsuarioCreate(UsuarioBase):
-    pass
-
-class UsuarioUpdate(UsuarioBase):
-    pass
-
 class CidadaoBase(UsuarioBase):
     endereco: str
     num_ocorrencias_registradas: Optional[int]
     telefone: Optional[str]
     celular: str
 
-class CidadaoCreate(UsuarioCreate):
+class CidadaoCreate(CidadaoBase):
     pass
 
-class CidadaoUpdate(UsuarioUpdate):
+class CidadaoUpdate(CidadaoBase):
     pass
 
 class FuncionarioDefesaCivilBase(UsuarioBase):
     cargo: str
     nivel_acesso: str
 
-class FuncionarioDefesaCivilCreate(UsuarioCreate):
+class FuncionarioDefesaCivilCreate(FuncionarioDefesaCivilBase):
     pass
 
-class FuncionarioDefesaCivilUpdate(UsuarioUpdate):
+class FuncionarioDefesaCivilUpdate(FuncionarioDefesaCivilBase):
     pass
