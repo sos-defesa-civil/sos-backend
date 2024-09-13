@@ -6,7 +6,7 @@ class Feedback(Base):
     __tablename__ = 'feedbacks'
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("funcionarios_defesa_civil.id"))
+    user_id = Column(Integer, ForeignKey("usuarios.id"))
     oc_id = Column(Integer, ForeignKey("ocorrencias.id"))
     titulo = Column(String(100))
     descricao = Column(Text)

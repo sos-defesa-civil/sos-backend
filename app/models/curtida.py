@@ -6,7 +6,7 @@ class Curtida(Base):
     __tablename__ = 'curtidas'
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("cidadaos.id"))
+    user_id = Column(Integer, ForeignKey("usuarios.id"))
     oc_id = Column(Integer, ForeignKey("ocorrencias.id"))
     data_registro = Column(DateTime)
 
