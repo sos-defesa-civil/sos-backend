@@ -1,12 +1,25 @@
 from sqlalchemy.orm import Session
 from app.models.ocorrencia import Ocorrencia
+from app.schemas.ocorrencia import OcorrenciaCreate
 from typing import List
 
-def create_ocorrencia(db: Session, user_id: int, tipo: str, descricao: str, data_registro: str, ultima_atualizacao: str) -> Ocorrencia:
-    db_ocorrencia = Ocorrencia(user_id=user_id, tipo=tipo, descricao=descricao, data_registro=data_registro, ultima_atualizacao=ultima_atualizacao)
+
+
+def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate) -> Ocorrencia:
+    db_ocorrencia = Ocorrencia(
+        user_id=ocorrencia.user_id,
+        tipo=ocorrencia.tipo,
+        descricao=ocorrencia.descricao,
+        data_registro=ocorrencia.data_registro,
+        ultima_atualizacao=ocorrencia.ultima_atualizacao,
+        latitude=ocorrencia.latitude,
+        longitude=ocorrencia.longitude
+    )
+    
     db.add(db_ocorrencia)
     db.commit()
     db.refresh(db_ocorrencia)
+    
     return db_ocorrencia
 
 def get_ocorrencias(db: Session, skip: int = 0, limit: int = 10) -> List[Ocorrencia]:

@@ -1,14 +1,17 @@
 from pydantic import BaseModel
-from typing import Optional
+from pydantic_extra_types.coordinate import Latitude, Longitude
+from typing import Literal, Optional
 from datetime import datetime
 
 class OcorrenciaBase(BaseModel):
-    id: int
-    tipo: str
+    #TODO configurar determinar todos os tipos
+    tipo: Literal['tipo1', 'tipo2', 'tipo3'] 
     descricao: str
     data_registro: datetime
     ultima_atualizacao: Optional[datetime]
     user_id: int
+    latitude: Latitude
+    longitude: Longitude
 
     class Config:
         orm_mode = True

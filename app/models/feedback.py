@@ -14,4 +14,4 @@ class Feedback(Base):
     data_registro = Column(DateTime)
 
     ocorrencia = relationship("Ocorrencia", back_populates="feedbacks")
-    usuario = relationship("Funcionario_Defesa_Civil", back_populates="feedbacks")
+    usuario = relationship("Usuario", back_populates="feedbacks")

@@ -15,10 +15,9 @@ class Usuario(Base):
 
     cidadao = relationship("Cidadao", uselist=False, back_populates="usuario")
     funcionario = relationship("Funcionario_Defesa_Civil", uselist=False, back_populates="usuario")
-
-    @declared_attr
-    def ocorrencias(cls):
-        return relationship("Ocorrencia", back_populates="usuario", foreign_keys="Ocorrencia.user_id")
+    ocorrencias = relationship("Ocorrencia", back_populates="usuario", foreign_keys="Ocorrencia.user_id")
+    curtidas = relationship("Curtida", back_populates="usuario")
+    feedbacks = relationship("Feedback", back_populates="usuario")
 
 class Cidadao(Base):
     __tablename__ = 'cidadaos'
@@ -29,7 +28,6 @@ class Cidadao(Base):
     celular = Column(String(15))
 
     usuario = relationship("Usuario", back_populates="cidadao")
-    curtidas = relationship("Curtida", back_populates="usuario")
 
 class Funcionario_Defesa_Civil(Base):
     __tablename__ = 'funcionarios_defesa_civil'
@@ -38,4 +36,3 @@ class Funcionario_Defesa_Civil(Base):
     nivel_acesso = Column(String(100))
 
     usuario = relationship("Usuario", back_populates="funcionario")
-    feedbacks = relationship("Feedback", back_populates="usuario")

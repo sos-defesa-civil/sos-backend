@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app.crud.ocorrencia import create_ocorrencia, get_ocorrencias, get_ocorrencia, update_ocorrencia, delete_ocorrencia
+from app.cruds.ocorrencia import create_ocorrencia, get_ocorrencias, get_ocorrencia, update_ocorrencia, delete_ocorrencia
 from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse
 from typing import List
 
@@ -16,11 +16,11 @@ def get_db():
 
 @router.post("/ocorrencia/", response_model=OcorrenciaResponse)
 def create_ocorrencia_route(ocorrencia: OcorrenciaCreate, db: Session = Depends(get_db)):
-    return create_ocorrencia(db, **ocorrencia.dict())
+    return create_ocorrencia(db, ocorrencia) 
 
 @router.get("/ocorrencia/", response_model=List[OcorrenciaResponse])
-def read_ocorrencias_route(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    return get_ocorrencias(db, skip=skip, limit=limit)
+def read_ocorrencias_route(db: Session = Depends(get_db)):
+    return get_ocorrencias(db)
 
 @router.get("/ocorrencia/{ocorrencia_id}", response_model=OcorrenciaResponse)
 def read_ocorrencia_route(ocorrencia_id: int, db: Session = Depends(get_db)):

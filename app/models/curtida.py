@@ -10,5 +10,5 @@ class Curtida(Base):
     oc_id = Column(Integer, ForeignKey("ocorrencias.id"))
     data_registro = Column(DateTime)
 
-    usuario = relationship("Cidadao", back_populates="curtidas")
+    usuario = relationship("Usuario", back_populates="curtidas")
     ocorrencia = relationship("Ocorrencia", back_populates="curtidas")

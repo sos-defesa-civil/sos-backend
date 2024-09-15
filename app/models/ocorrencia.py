@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Float, Integer, String, Text, DateTime, ForeignKey
 from app.database import Base
 from sqlalchemy.orm import relationship
 
@@ -11,6 +11,8 @@ class Ocorrencia(Base):
     descricao = Column(Text)
     data_registro = Column(DateTime)
     ultima_atualizacao = Column(DateTime)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
 
     usuario = relationship("Usuario", back_populates="ocorrencias")
     feedbacks = relationship("Feedback", back_populates="ocorrencia")
