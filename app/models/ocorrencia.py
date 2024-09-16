@@ -8,6 +8,7 @@ class Ocorrencia(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("usuarios.id"))
     tipo = Column(String(100))
+    bairro = Column(String(100))
     descricao = Column(Text)
     data_registro = Column(DateTime)
     ultima_atualizacao = Column(DateTime)

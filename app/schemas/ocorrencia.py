@@ -6,6 +6,7 @@ from datetime import datetime
 class OcorrenciaBase(BaseModel):
     #TODO configurar determinar todos os tipos
     tipo: Literal['tipo1', 'tipo2', 'tipo3'] 
+    bairro: str
     descricao: str
     data_registro: datetime
     ultima_atualizacao: Optional[datetime]
@@ -14,7 +15,7 @@ class OcorrenciaBase(BaseModel):
     longitude: Longitude
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class OcorrenciaCreate(OcorrenciaBase):
     pass
@@ -25,6 +26,16 @@ class OcorrenciaUpdate(OcorrenciaBase):
 
 class OcorrenciaResponse(OcorrenciaBase):
     id: int
+
+    class Config:
+        from_attributes = True
+
+
+class Bounds(BaseModel):
+    ne_lat: Latitude
+    ne_lng: Longitude
+    sw_lat: Latitude
+    sw_lng: Longitude
 
     class Config:
         from_attributes = True
