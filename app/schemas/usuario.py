@@ -11,7 +11,7 @@ class UsuarioBase(BaseModel):
     admin: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CidadaoBase(UsuarioBase):
     endereco: str

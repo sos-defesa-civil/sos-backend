@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, File, HTTPException, Depends, Query, UploadFile
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app.cruds.ocorrencia import create_ocorrencia, get_ocorrencias, get_ocorrencia, update_ocorrencia, delete_ocorrencia
-from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse
-from typing import List
+from app.cruds.ocorrencia import create_ocorrencia, get_ocorrencias_map, get_ocorrencias_list, get_ocorrencia, update_ocorrencia, delete_ocorrencia
+from app.cruds.midia import create_midia 
+from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, Bounds
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -15,12 +16,30 @@ def get_db():
         db.close()
 
 @router.post("/ocorrencia/", response_model=OcorrenciaResponse)
-def create_ocorrencia_route(ocorrencia: OcorrenciaCreate, db: Session = Depends(get_db)):
-    return create_ocorrencia(db, ocorrencia) 
+def create_ocorrencia_route(ocorrencia: OcorrenciaCreate, midias: Optional[List[UploadFile]] = File(None), db: Session = Depends(get_db)):
+    ocorrencia = create_ocorrencia(db, ocorrencia)
+    create_midia(db, midias, ocorrencia.id)
+    return ocorrencia 
 
-@router.get("/ocorrencia/", response_model=List[OcorrenciaResponse])
-def read_ocorrencias_route(db: Session = Depends(get_db)):
-    return get_ocorrencias(db)
+@router.get("/ocorrencias/map/", response_model=List[OcorrenciaResponse])
+def read_ocorrencias_map_route(
+    ne_lat: float = Query(...), 
+    ne_lng: float = Query(...), 
+    sw_lat: float = Query(...), 
+    sw_lng: float = Query(...), 
+    db: Session = Depends(get_db)):
+    return get_ocorrencias_map(db, ne_lat, ne_lng, sw_lat, sw_lng)
+
+@router.get("/ocorrencias/list/", response_model=List[OcorrenciaResponse])
+def read_ocorrencias_list_route(
+    db: Session = Depends(get_db),
+    bairro: Optional[str] = None,
+    tipo: Optional[str] = None,
+    data_inicio: Optional[str] = Query(None, alias="dataInicio"),
+    data_fim: Optional[str] = Query(None, alias="dataFim"),
+    limit: int = 10,
+    offset: int = 0):
+    return get_ocorrencias_list(db, bairro, tipo, data_inicio, data_fim, limit, offset)
 
 @router.get("/ocorrencia/{ocorrencia_id}", response_model=OcorrenciaResponse)
 def read_ocorrencia_route(ocorrencia_id: int, db: Session = Depends(get_db)):

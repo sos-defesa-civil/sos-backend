@@ -12,7 +12,7 @@ class FeedbackBase(BaseModel):
     oc_id: int
 
     class Config:
-        orm_mode = True
+        orm_from_attributesmode = True
 
 class FeedbackCreate(FeedbackBase):
     pass
