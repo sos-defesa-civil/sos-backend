@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from pydantic_extra_types.coordinate import Latitude, Longitude
-from typing import Literal, Optional
+from app.schemas.curtida import CurtidaResponse
+from typing import Literal, Optional, List
 from datetime import datetime
 
 class OcorrenciaBase(BaseModel):
