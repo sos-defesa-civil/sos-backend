@@ -2,8 +2,10 @@ from fastapi import APIRouter, File, HTTPException, Depends, Query, UploadFile
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.cruds.ocorrencia import create_ocorrencia, get_ocorrencias_map, get_ocorrencias_list, get_ocorrencia, update_ocorrencia, delete_ocorrencia
-from app.cruds.midia import create_midia 
+from app.cruds.midia import create_midia
+from app.cruds.curtida import create_curtida, delete_curtida
 from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, Bounds
+from app.schemas.curtida import CurtidaCreate, CurtidaResponse
 from typing import List, Optional
 
 router = APIRouter()
@@ -16,9 +18,9 @@ def get_db():
         db.close()
 
 @router.post("/ocorrencia/", response_model=OcorrenciaResponse)
-def create_ocorrencia_route(ocorrencia: OcorrenciaCreate, midias: Optional[List[UploadFile]] = File(None), db: Session = Depends(get_db)):
+def create_ocorrencia_route(ocorrencia: OcorrenciaCreate, db: Session = Depends(get_db)):#, midias: Optional[List[UploadFile]] = File(None), ):
     ocorrencia = create_ocorrencia(db, ocorrencia)
-    create_midia(db, midias, ocorrencia.id)
+    # create_midia(db, midias, ocorrencia.id)
     return ocorrencia 
 
 @router.get("/ocorrencias/map/", response_model=List[OcorrenciaResponse])
@@ -61,3 +63,18 @@ def delete_ocorrencia_route(ocorrencia_id: int, db: Session = Depends(get_db)):
     if db_ocorrencia is None:
         raise HTTPException(status_code=404, detail="Ocorrencia not found")
     return db_ocorrencia
+
+@router.post("/ocorrencia/{ocorrencia_id}/curtidas/", response_model=CurtidaResponse)
+def add_curtida_route(curtida: CurtidaCreate, db: Session = Depends(get_db)):
+    curtida = create_curtida(db, curtida)
+    
+    return curtida
+
+@router.delete("/ocorrencia/{ocorrencia_id}/curtidas/", response_model=CurtidaResponse)
+def delete_curtida_route(curtida_id: int, db: Session = Depends(get_db)):
+    db_curtida = delete_curtida(db, curtida_id)
+    
+    if not db_curtida:
+        raise HTTPException(status_code=404, detail="Curtida not found")
+    
+    return db_curtida

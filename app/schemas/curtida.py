@@ -9,7 +9,14 @@ class CurtidaBase(BaseModel):
     oc_id: int
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class CurtidaCreate(CurtidaBase):
     pass
+
+class CurtidaResponse(CurtidaBase):
+    id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True

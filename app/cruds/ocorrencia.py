@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from app.models.ocorrencia import Ocorrencia
-from app.schemas.ocorrencia import OcorrenciaCreate
+from app.models.curtida import Curtida
+from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse
 from typing import List, Optional
-
-
+from sqlalchemy import func
 
 def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate) -> Ocorrencia:
     db_ocorrencia = Ocorrencia(
@@ -37,11 +37,14 @@ def get_ocorrencias_list(
     data_fim: Optional[str],
     limit: int,
     offset: int
-) -> List[Ocorrencia]:
+) -> List[OcorrenciaResponse]:
     
-    query = db.query(Ocorrencia)
+    # Consulta base com join para contar as curtidas
+    query = db.query(
+        Ocorrencia,
+        func.count(Curtida.id).label("curtidas_count")
+    ).outerjoin(Ocorrencia.curtidas).group_by(Ocorrencia.id)
     
-    # Add filters conditionally
     if bairro:
         query = query.filter(Ocorrencia.bairro == bairro)
     
@@ -55,10 +58,20 @@ def get_ocorrencias_list(
     elif data_fim:
         query = query.filter(Ocorrencia.data_registro <= data_fim)
 
-    # Apply pagination
     query = query.offset(offset).limit(limit)
 
-    return query.all()
+    ocorrencias = query.all()
+
+    # Converta os resultados para uma lista de OcorrenciaResponse
+    result = [
+        OcorrenciaResponse(
+            **ocorrencia.__dict__,
+            curtidas_count=curtidas_count
+        )
+        for ocorrencia, curtidas_count in ocorrencias
+    ]
+
+    return result
 
 def get_ocorrencia(db: Session, ocorrencia_id: int) -> Ocorrencia:
     return db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
