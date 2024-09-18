@@ -27,7 +27,6 @@ class OcorrenciaUpdate(OcorrenciaBase):
 
 class OcorrenciaResponse(OcorrenciaBase):
     id: int
-    curtidas_count: int
 
     class Config:
         from_attributes = True

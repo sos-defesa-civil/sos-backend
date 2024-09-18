@@ -18,7 +18,11 @@ def get_db():
         db.close()
 
 @router.post("/ocorrencia/", response_model=OcorrenciaResponse)
-def create_ocorrencia_route(ocorrencia: OcorrenciaCreate, db: Session = Depends(get_db)):#, midias: Optional[List[UploadFile]] = File(None), ):
+
+def create_ocorrencia_route(ocorrencia: OcorrenciaCreate,
+                            #  midias: Optional[List[UploadFile]] = File(None), 
+                             db: Session = Depends(get_db)):
+    
     ocorrencia = create_ocorrencia(db, ocorrencia)
     # create_midia(db, midias, ocorrencia.id)
     return ocorrencia 
@@ -41,6 +45,8 @@ def read_ocorrencias_list_route(
     data_fim: Optional[str] = Query(None, alias="dataFim"),
     limit: int = 10,
     offset: int = 0):
+
+    
     return get_ocorrencias_list(db, bairro, tipo, data_inicio, data_fim, limit, offset)
 
 @router.get("/ocorrencia/{ocorrencia_id}", response_model=OcorrenciaResponse)
