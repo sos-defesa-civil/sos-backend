@@ -1,24 +1,16 @@
 from fastapi import APIRouter, File, HTTPException, Depends, Query, UploadFile
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
 from app.cruds.ocorrencia import create_ocorrencia, get_ocorrencias_map, get_ocorrencias_list, get_ocorrencia, update_ocorrencia, delete_ocorrencia
 from app.cruds.midia import create_midia
 from app.cruds.curtida import create_curtida, delete_curtida
 from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, Bounds
 from app.schemas.curtida import CurtidaCreate, CurtidaResponse
 from typing import List, Optional
+from app.database import get_db
 
 router = APIRouter()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 @router.post("/ocorrencia/", response_model=OcorrenciaResponse)
-
 def create_ocorrencia_route(ocorrencia: OcorrenciaCreate,
                             #  midias: Optional[List[UploadFile]] = File(None), 
                              db: Session = Depends(get_db)):
