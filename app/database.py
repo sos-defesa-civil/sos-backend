@@ -15,3 +15,10 @@ from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
 from app.models.feedback import Feedback
 from app.models.midia import Midia
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
