@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import datetime
 
 class FeedbackBase(BaseModel):
-    id: int
     titulo: str
     descricao: str
     status: str
@@ -18,4 +17,7 @@ class FeedbackCreate(FeedbackBase):
     pass
 
 class FeedbackUpdate(FeedbackBase):
-    pass
+    id: int
+
+class FeedbackResponse(FeedbackBase):
+    id: int
