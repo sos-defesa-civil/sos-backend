@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import datetime
 
 class MidiaBase(BaseModel):
-    id: int
     tipo: str
     caminho: str
     oc_id: int
@@ -14,3 +13,5 @@ class MidiaBase(BaseModel):
 class MidiaCreate(MidiaBase):
     pass
 
+class MidiaResponse(MidiaBase):
+    id: int
