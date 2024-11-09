@@ -54,3 +54,7 @@ class FuncionarioDefesaCivilUpdate(FuncionarioDefesaCivilBase):
 
 class FuncionarioResponse(FuncionarioDefesaCivilBase):
     id: int  # Ensure `id` field is included if it's returned
+
+class Login(BaseModel):
+    email: str
+    senha: str

@@ -1,7 +1,34 @@
 from sqlalchemy.orm import Session
 from app.models.usuario import Usuario, Cidadao, Funcionario_Defesa_Civil
 from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, CidadaoCreate, FuncionarioDefesaCivilCreate
-from fastapi import HTTPException
+from app.auth.password import hash_password
+from fastapi import HTTPException, status, Depends
+from jose import JWTError, jwt
+from app.database import get_db
+from app.auth.token import SECRET_KEY, ALGORITHM 
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+# Dependency to get the current user from the JWT token
+def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> Usuario:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        user = db.query(Usuario).filter(Usuario.email == email).first()
+        if user is None:
+            raise credentials_exception
+        return user
+    except JWTError:
+        raise credentials_exception
 
 
 # Create a base user (shared between both Cidadao and Funcionario)
@@ -11,7 +38,7 @@ def create_base_usuario(db: Session, usuario_data: UsuarioCreate) -> Usuario:
         data_nascimento=usuario_data.data_nascimento,
         cpf=usuario_data.cpf,
         email=usuario_data.email,
-        senha=usuario_data.senha,  # You should hash the password here
+        senha=hash_password(usuario_data.senha),  # You should hash the password here
         admin=usuario_data.admin,
     )
     db.add(db_usuario)

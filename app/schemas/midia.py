@@ -14,5 +14,3 @@ class MidiaBase(BaseModel):
 class MidiaCreate(MidiaBase):
     pass
 
-class MidiaUpdate(MidiaBase):
-    pass
