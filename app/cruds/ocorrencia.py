@@ -23,7 +23,9 @@ def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate, user_id) -> Oco
     db.commit()
     db.refresh(db_ocorrencia)
 
-    create_log(db, user_id, "CREATE", db_ocorrencia.id)
+    description = f"Created Ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
+
+    create_log(db, user_id, "CREATE", description)
     
     return db_ocorrencia
 
@@ -130,7 +132,10 @@ def delete_ocorrencia(db: Session, ocorrencia_id: int, user_id: int) -> Ocorrenc
     db_ocorrencia = db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
     if db_ocorrencia:
 
-        create_log(db, user_id, "DELETE", f"Detalhes: {db_ocorrencia}")
+        description = f"Deleted Ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
+        create_log(db, user_id, "DELETE", description)
+
         db.delete(db_ocorrencia)
         db.commit()
+        
     return db_ocorrencia
