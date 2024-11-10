@@ -1,7 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
 from app.database import Base
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declared_attr
 
 class Usuario(Base):
     __tablename__ = 'usuarios'

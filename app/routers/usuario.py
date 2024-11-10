@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.schemas.usuario import CidadaoCreate, FuncionarioDefesaCivilCreate, UsuarioUpdate, UsuarioResponse, CidadaoResponse, FuncionarioResponse, Login
 from app.cruds.usuario import create_cidadao, create_funcionario, get_usuario, get_usuarios, update_usuario, delete_usuario
 from app.auth.password import verify_password
-from app.auth.token import create_access_token, get_current_user
+from app.auth.token import create_access_token, get_current_user, create_session_data
 from app.models.usuario import Usuario
 from app.database import get_db
 
@@ -50,6 +50,7 @@ async def login(
 
     # Create a JWT token with the user's email
     access_token = create_access_token(data={"sub": db_usuario.email})
+    create_session_data(db, db_usuario.id)
     
     return {"access_token": access_token, "token_type": "bearer"}
 

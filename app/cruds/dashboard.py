@@ -3,7 +3,53 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
+from app.models.session_data import SessionData
 from app.schemas.dashboard import CardResponse, TipoCount, MonthlyTipoCount, PieChartResponse, MonthlyPieChartResponse
+
+
+def get_session_data(db: Session) -> CardResponse:
+    # Define date ranges
+    today = datetime.now().date()
+    yesterday = today - timedelta(days=1)
+    last_week_start = today - timedelta(days=7)
+    week_before_start = today - timedelta(days=14)
+
+    # Assuming SessionData is used to track session events (like user activity in a period)
+    # Query total session-like data
+    total_sessions = db.query(func.count(SessionData.id)).scalar()
+
+    # Query sessions for today
+    today_sessions = db.query(func.count(SessionData.id)).filter(func.date(SessionData.session_start) == today).scalar()
+
+    # Query sessions for yesterday
+    yesterday_sessions = db.query(func.count(SessionData.id)).filter(func.date(SessionData.session_start) == yesterday).scalar()
+
+    # Query sessions for the last week
+    last_week_sessions = db.query(func.count(SessionData.id)).filter(SessionData.session_start >= last_week_start).scalar()
+
+    # Query sessions for the week before last
+    week_before_sessions = db.query(func.count(SessionData.id)).filter(SessionData.session_start >= week_before_start, SessionData.session_start < last_week_start).scalar()
+
+    # Calculate percentage difference for yesterday
+    if yesterday_sessions > 0:
+        yesterday_percent = ((today_sessions - yesterday_sessions) / yesterday_sessions) * 100
+    else:
+        yesterday_percent = 0
+
+    # Calculate percentage difference for last week
+    if week_before_sessions > 0:
+        last_week_percent = ((last_week_sessions - week_before_sessions) / week_before_sessions) * 100
+    else:
+        last_week_percent = 0
+
+    # Create Card instance with the counts and percentage differences
+    return CardResponse(
+        total=total_sessions,
+        today=today_sessions,
+        yesterdayPercent=yesterday_percent,
+        lastWeekPercent=last_week_percent
+    )
+
 
 def get_ocorrencia_data(db: Session) -> CardResponse:
     # Define date ranges

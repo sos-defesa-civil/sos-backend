@@ -16,6 +16,7 @@ from app.models.curtida import Curtida
 from app.models.feedback import Feedback
 from app.models.midia import Midia
 from app.models.registro import Registro
+from app.models.session_data import SessionData
 
 def get_db():
     db = SessionLocal()
