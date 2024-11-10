@@ -19,3 +19,11 @@ class Ocorrencia(Base):
     feedbacks = relationship("Feedback", back_populates="ocorrencia")
     curtidas = relationship("Curtida", back_populates="ocorrencia")
     midias = relationship("Midia", back_populates="ocorrencia")
+
+    def __repr__(self):
+        return (
+            f"Ocorrencia(id={self.id}, user_id={self.user_id}, tipo='{self.tipo}', "
+            f"bairro='{self.bairro}', data_registro={self.data_registro}, "
+            f"ultima_atualizacao={self.ultima_atualizacao}, "
+            f"latitude={self.latitude}, longitude={self.longitude})"
+        )

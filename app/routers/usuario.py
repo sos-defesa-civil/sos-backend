@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.schemas.usuario import CidadaoCreate, FuncionarioDefesaCivilCreate, UsuarioUpdate, UsuarioResponse, CidadaoResponse, FuncionarioResponse, Login
-from app.cruds.usuario import create_cidadao, create_funcionario, get_usuario, get_usuarios, update_usuario, delete_usuario, get_current_user
-from app.models.usuario import Usuario
+from app.cruds.usuario import create_cidadao, create_funcionario, get_usuario, get_usuarios, update_usuario, delete_usuario
 from app.auth.password import verify_password
-from app.auth.token import create_access_token
+from app.auth.token import create_access_token, get_current_user
+from app.models.usuario import Usuario
 from app.database import get_db
 
 router = APIRouter()

@@ -15,6 +15,7 @@ from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
 from app.models.feedback import Feedback
 from app.models.midia import Midia
+from app.models.registro import Registro
 
 def get_db():
     db = SessionLocal()

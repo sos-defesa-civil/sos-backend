@@ -1,22 +1,19 @@
-from fastapi import APIRouter, File, HTTPException, Depends, Query, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from app.cruds.ocorrencia import create_ocorrencia, get_ocorrencias_map, get_ocorrencias_list, get_ocorrencia, update_ocorrencia, delete_ocorrencia
-from app.cruds.midia import create_midia
 from app.cruds.curtida import create_curtida, delete_curtida
 from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, Bounds
 from app.schemas.curtida import CurtidaCreate, CurtidaResponse
+from app.auth.token import get_current_user
+from app.models.usuario import Usuario
 from typing import List, Optional
 from app.database import get_db
 
 router = APIRouter()
 
 @router.post("/ocorrencia/", response_model=OcorrenciaResponse)
-def create_ocorrencia_route(ocorrencia: OcorrenciaCreate,
-                            #  midias: Optional[List[UploadFile]] = File(None), 
-                             db: Session = Depends(get_db)):
-    
-    ocorrencia = create_ocorrencia(db, ocorrencia)
-    # create_midia(db, midias, ocorrencia.id)
+def create_ocorrencia_route(ocorrencia: OcorrenciaCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    ocorrencia = create_ocorrencia(db, ocorrencia, current_user.id)  
     return ocorrencia 
 
 @router.get("/ocorrencias/map/", response_model=List[OcorrenciaResponse])
@@ -49,15 +46,15 @@ def read_ocorrencia_route(ocorrencia_id: int, db: Session = Depends(get_db)):
     return db_ocorrencia
 
 @router.put("/ocorrencia/{ocorrencia_id}", response_model=OcorrenciaResponse)
-def update_ocorrencia_route(ocorrencia_id: int, ocorrencia: OcorrenciaCreate, db: Session = Depends(get_db)):
-    db_ocorrencia = update_ocorrencia(db, ocorrencia_id, **ocorrencia.dict())
+def update_ocorrencia_route(ocorrencia_id: int, ocorrencia: OcorrenciaCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    db_ocorrencia = update_ocorrencia(db, ocorrencia_id, ocorrencia, current_user.id)
     if db_ocorrencia is None:
         raise HTTPException(status_code=404, detail="Ocorrencia not found")
     return db_ocorrencia
 
 @router.delete("/ocorrencia/{ocorrencia_id}", response_model=OcorrenciaResponse)
-def delete_ocorrencia_route(ocorrencia_id: int, db: Session = Depends(get_db)):
-    db_ocorrencia = delete_ocorrencia(db, ocorrencia_id)
+def delete_ocorrencia_route(ocorrencia_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    db_ocorrencia = delete_ocorrencia(db, ocorrencia_id, current_user.id)
     if db_ocorrencia is None:
         raise HTTPException(status_code=404, detail="Ocorrencia not found")
     return db_ocorrencia

@@ -2,12 +2,14 @@ from sqlalchemy.orm import Session
 from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
 from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse
+from app.cruds.registro import create_log
 from typing import List, Optional
 from sqlalchemy import func
+import json
 
-def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate) -> Ocorrencia:
+def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate, user_id) -> Ocorrencia:
     db_ocorrencia = Ocorrencia(
-        user_id=ocorrencia.user_id,
+        user_id=user_id,
         tipo=ocorrencia.tipo,
         bairro=ocorrencia.bairro,
         descricao=ocorrencia.descricao,
@@ -20,6 +22,8 @@ def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate) -> Ocorrencia:
     db.add(db_ocorrencia)
     db.commit()
     db.refresh(db_ocorrencia)
+
+    create_log(db, user_id, "CREATE", db_ocorrencia.id)
     
     return db_ocorrencia
 
@@ -76,21 +80,57 @@ def get_ocorrencias_list(
 def get_ocorrencia(db: Session, ocorrencia_id: int) -> Ocorrencia:
     return db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
 
-def update_ocorrencia(db: Session, ocorrencia_id: int, tipo: str, bairro: str, descricao: str, data_registro: str, ultima_atualizacao: str) -> Ocorrencia:
+def update_ocorrencia(db: Session, ocorrencia_id: int, ocorrencia: Ocorrencia, user_id: int) -> Ocorrencia:
     db_ocorrencia = db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
+    
     if db_ocorrencia:
-        db_ocorrencia.tipo = tipo
-        db_ocorrencia.bairro = bairro
-        db_ocorrencia.descricao = descricao
-        db_ocorrencia.data_registro = data_registro
-        db_ocorrencia.ultima_atualizacao = ultima_atualizacao
+        # Capture the old values for logging
+        old_values = {
+            "tipo": db_ocorrencia.tipo,
+            "bairro": db_ocorrencia.bairro,
+            "descricao": db_ocorrencia.descricao,
+            "data_registro": db_ocorrencia.data_registro,
+            "ultima_atualizacao": db_ocorrencia.ultima_atualizacao,
+        }
+        
+        # Update the fields
+        db_ocorrencia.tipo = ocorrencia.tipo
+        db_ocorrencia.bairro = ocorrencia.bairro
+        db_ocorrencia.descricao = ocorrencia.descricao
+        db_ocorrencia.data_registro = ocorrencia.data_registro
+        db_ocorrencia.ultima_atualizacao = ocorrencia.ultima_atualizacao
+
+        # Save the update
         db.commit()
         db.refresh(db_ocorrencia)
+
+        # Log the update
+        updated_values = {
+            "tipo": db_ocorrencia.tipo,
+            "bairro": db_ocorrencia.bairro,
+            "descricao": db_ocorrencia.descricao,
+            "data_registro": db_ocorrencia.data_registro,
+            "ultima_atualizacao": db_ocorrencia.ultima_atualizacao,
+        }
+        
+        # Format the log description with the changes
+        description = (
+            f"Updated Ocorrencia ID {ocorrencia_id}. Changes: "
+            + ", ".join(
+                f"{key}: '{old_values[key]}' -> '{updated_values[key]}'"
+                for key in old_values if old_values[key] != updated_values[key]
+            )
+        )
+        
+        create_log(db, user_id, "UPDATE", description)
+
     return db_ocorrencia
 
-def delete_ocorrencia(db: Session, ocorrencia_id: int) -> Ocorrencia:
+def delete_ocorrencia(db: Session, ocorrencia_id: int, user_id: int) -> Ocorrencia:
     db_ocorrencia = db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
     if db_ocorrencia:
+
+        create_log(db, user_id, "DELETE", f"Detalhes: {db_ocorrencia}")
         db.delete(db_ocorrencia)
         db.commit()
     return db_ocorrencia
