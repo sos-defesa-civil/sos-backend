@@ -26,7 +26,7 @@ def me(current_user: Usuario = Depends(get_current_user)):
     return current_user
 
 # Get user by ID
-@router.get("/{usuario_id}", response_model=UsuarioResponse)
+@router.get("/usuario/{usuario_id}", response_model=UsuarioResponse)
 def read_user(usuario_id: int, db: Session = Depends(get_db)):
     db_usuario = get_usuario(db, usuario_id)
     if db_usuario is None:

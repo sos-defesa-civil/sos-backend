@@ -12,8 +12,7 @@ def create_log(db: Session, user_id: int, log_type: str, log_description):
     db.refresh(new_log)
     return new_log
 
-def get_logs(db: Session, user_id: int = None):
+def get_logs(db: Session):
     query = db.query(Registro)
-    if user_id:
-        query = query.filter(Registro.user_id == user_id)
+
     return query.all()
