@@ -180,14 +180,7 @@ def delete_ocorrencia(db: Session, ocorrencia_id: int, user_id: int) -> Ocorrenc
         midias = db.query(Midia).filter(Midia.oc_id == ocorrencia_id).all()
         feedbacks = db.query(Feedback).filter(Feedback.oc_id == ocorrencia_id).all()
 
-        description = f"Deletado ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
-        create_log(db, user_id, "DELETE", description)
-
-        # Delete the occurrence and let cascade handle related records
-        db.delete(db_ocorrencia)
-        db.commit()
-
-        # Create a dict with only the fields we want
+        # Create the response before deletion
         ocorrencia_dict = {
             'id': ocorrencia.id,
             'user_id': ocorrencia.user_id,
@@ -200,11 +193,20 @@ def delete_ocorrencia(db: Session, ocorrencia_id: int, user_id: int) -> Ocorrenc
             'longitude': ocorrencia.longitude
         }
 
-        return OcorrenciaResponse(
+        response = OcorrenciaResponse(
             **ocorrencia_dict,
             curtidas_count=curtidas_count,
             midias_count=midias_count,
             midias=[f"/api/midia/file/{midia.id}" for midia in midias],
             feedbacks=[FeedbackResponse.from_orm(feedback) for feedback in feedbacks]
         )
+
+        # Log and delete after creating the response
+        description = f"Deletado ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
+        create_log(db, user_id, "DELETE", description)
+
+        db.delete(db_ocorrencia)
+        db.commit()
+
+        return response
     return None
