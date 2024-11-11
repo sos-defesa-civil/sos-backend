@@ -3,6 +3,7 @@ from pydantic_extra_types.coordinate import Latitude, Longitude
 from app.schemas.curtida import CurtidaResponse
 from typing import Literal, Optional, List
 from datetime import datetime
+from app.schemas.feedback import FeedbackResponse
 
 class OcorrenciaBase(BaseModel):
     #TODO configurar determinar todos os tipos
@@ -27,6 +28,10 @@ class OcorrenciaUpdate(OcorrenciaBase):
 
 class OcorrenciaResponse(OcorrenciaBase):
     id: int
+    curtidas_count: Optional[int] = 0
+    midias_count: Optional[int] = 0
+    midias: Optional[List[str]] = []
+    feedbacks: Optional[List[FeedbackResponse]] = []
 
     class Config:
         from_attributes = True

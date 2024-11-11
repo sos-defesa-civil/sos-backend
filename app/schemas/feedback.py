@@ -21,3 +21,8 @@ class FeedbackUpdate(FeedbackBase):
 
 class FeedbackResponse(FeedbackBase):
     id: int
+    user_id: int
+    oc_id: int
+
+    class Config:
+        from_attributes = True

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.registro import Registro
+from app.models.usuario import Usuario
 
 def create_log(db: Session, user_id: int, log_type: str, log_description):
     new_log = Registro(
@@ -13,6 +14,23 @@ def create_log(db: Session, user_id: int, log_type: str, log_description):
     return new_log
 
 def get_logs(db: Session):
-    query = db.query(Registro)
+    query = db.query(
+        Registro,
+        Usuario.nome.label('nome')
+    ).join(Usuario, Registro.user_id == Usuario.id)
 
-    return query.all()
+    results = query.all()
+    
+    logs = []
+    for registro, nome in results:
+        log_dict = {
+            "id": registro.id,
+            "user_id": registro.user_id,
+            "username": nome,
+            "data": registro.data,
+            "tipo": registro.tipo,
+            "descricao": registro.descricao
+        }
+        logs.append(log_dict)
+    
+    return logs

@@ -1,11 +1,15 @@
 from sqlalchemy.orm import Session
 from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
+from app.models.midia import Midia
 from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse
 from app.cruds.registro import create_log
 from typing import List, Optional
 from sqlalchemy import func
 import json
+from app.models.feedback import Feedback
+from app.schemas.feedback import FeedbackCreate, FeedbackResponse
+from app.cruds.feedback import create_feedback
 
 def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate, user_id) -> Ocorrencia:
     db_ocorrencia = Ocorrencia(
@@ -23,8 +27,18 @@ def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate, user_id) -> Oco
     db.commit()
     db.refresh(db_ocorrencia)
 
-    description = f"Created Ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
+    # Create initial feedback
+    feedback = FeedbackCreate(
+        titulo="Ocorrência Criada",
+        descricao="Ocorrência criada no sistema",
+        status="open",
+        data_registro=ocorrencia.data_registro,
+        user_id=user_id,
+        oc_id=db_ocorrencia.id
+    )
+    create_feedback(db, feedback, user_id)
 
+    description = f"Criado ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
     create_log(db, user_id, "CREATE", description)
     
     return db_ocorrencia
@@ -45,11 +59,12 @@ def get_ocorrencias_list(
     offset: int
 ) -> List[OcorrenciaResponse]:
     
-    # Consulta base com join para contar as curtidas
+    # Consulta base com join para contar as curtidas e midias
     query = db.query(
         Ocorrencia,
-        func.count(Curtida.id).label("curtidas_count")
-    ).outerjoin(Ocorrencia.curtidas).group_by(Ocorrencia.id)
+        func.count(Curtida.id).label("curtidas_count"),
+        func.count(Midia.id).label("midias_count")
+    ).outerjoin(Ocorrencia.curtidas).outerjoin(Ocorrencia.midias).group_by(Ocorrencia.id)
     
     if bairro:
         query = query.filter(Ocorrencia.bairro == bairro)
@@ -72,15 +87,36 @@ def get_ocorrencias_list(
     result = [
         OcorrenciaResponse(
             **ocorrencia.__dict__,
-            curtidas_count=curtidas_count
+            curtidas_count=curtidas_count,
+            midias_count=midias_count
         )
-        for ocorrencia, curtidas_count in ocorrencias
+        for ocorrencia, curtidas_count, midias_count in ocorrencias
     ]
 
     return result
 
-def get_ocorrencia(db: Session, ocorrencia_id: int) -> Ocorrencia:
-    return db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
+def get_ocorrencia(db: Session, ocorrencia_id: int) -> OcorrenciaResponse:
+    result = db.query(
+        Ocorrencia,
+        func.count(Curtida.id).label("curtidas_count"),
+        func.count(Midia.id).label("midias_count")
+    ).outerjoin(Ocorrencia.curtidas).outerjoin(Ocorrencia.midias)\
+    .filter(Ocorrencia.id == ocorrencia_id)\
+    .group_by(Ocorrencia.id).first()
+
+    if result:
+        ocorrencia, curtidas_count, midias_count = result
+        midias = db.query(Midia).filter(Midia.oc_id == ocorrencia_id).all()
+        feedbacks = db.query(Feedback).filter(Feedback.oc_id == ocorrencia_id).all()
+        
+        return OcorrenciaResponse(
+            **ocorrencia.__dict__,
+            curtidas_count=curtidas_count,
+            midias_count=midias_count,
+            midias=[f"/api/midia/file/{midia.id}" for midia in midias],
+            feedbacks=[FeedbackResponse.from_orm(feedback) for feedback in feedbacks]
+        )
+    return None
 
 def update_ocorrencia(db: Session, ocorrencia_id: int, ocorrencia: Ocorrencia, user_id: int) -> Ocorrencia:
     db_ocorrencia = db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
@@ -117,7 +153,7 @@ def update_ocorrencia(db: Session, ocorrencia_id: int, ocorrencia: Ocorrencia, u
         
         # Format the log description with the changes
         description = (
-            f"Updated Ocorrencia ID {ocorrencia_id}. Changes: "
+            f"Atualizado ocorrencia ID {ocorrencia_id}. Mudanças: "
             + ", ".join(
                 f"{key}: '{old_values[key]}' -> '{updated_values[key]}'"
                 for key in old_values if old_values[key] != updated_values[key]
@@ -128,14 +164,47 @@ def update_ocorrencia(db: Session, ocorrencia_id: int, ocorrencia: Ocorrencia, u
 
     return db_ocorrencia
 
-def delete_ocorrencia(db: Session, ocorrencia_id: int, user_id: int) -> Ocorrencia:
+def delete_ocorrencia(db: Session, ocorrencia_id: int, user_id: int) -> OcorrenciaResponse:
     db_ocorrencia = db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
     if db_ocorrencia:
+        # Get the data before deletion for response
+        result = db.query(
+            Ocorrencia,
+            func.count(Curtida.id).label("curtidas_count"),
+            func.count(Midia.id).label("midias_count")
+        ).outerjoin(Ocorrencia.curtidas).outerjoin(Ocorrencia.midias)\
+        .filter(Ocorrencia.id == ocorrencia_id)\
+        .group_by(Ocorrencia.id).first()
 
-        description = f"Deleted Ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
+        ocorrencia, curtidas_count, midias_count = result
+        midias = db.query(Midia).filter(Midia.oc_id == ocorrencia_id).all()
+        feedbacks = db.query(Feedback).filter(Feedback.oc_id == ocorrencia_id).all()
+
+        description = f"Deletado ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
         create_log(db, user_id, "DELETE", description)
 
+        # Delete the occurrence and let cascade handle related records
         db.delete(db_ocorrencia)
         db.commit()
-        
-    return db_ocorrencia
+
+        # Create a dict with only the fields we want
+        ocorrencia_dict = {
+            'id': ocorrencia.id,
+            'user_id': ocorrencia.user_id,
+            'tipo': ocorrencia.tipo,
+            'bairro': ocorrencia.bairro,
+            'descricao': ocorrencia.descricao,
+            'data_registro': ocorrencia.data_registro,
+            'ultima_atualizacao': ocorrencia.ultima_atualizacao,
+            'latitude': ocorrencia.latitude,
+            'longitude': ocorrencia.longitude
+        }
+
+        return OcorrenciaResponse(
+            **ocorrencia_dict,
+            curtidas_count=curtidas_count,
+            midias_count=midias_count,
+            midias=[f"/api/midia/file/{midia.id}" for midia in midias],
+            feedbacks=[FeedbackResponse.from_orm(feedback) for feedback in feedbacks]
+        )
+    return None

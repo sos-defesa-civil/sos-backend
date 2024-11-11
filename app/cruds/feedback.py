@@ -18,7 +18,7 @@ def create_feedback(db: Session, feedback: FeedbackCreate, user_id: int) -> Feed
     db.refresh(db_feedback)
     
     # Log the creation action
-    description = f"Created Feedback ID: {db_feedback.id}, Title: '{db_feedback.titulo}', Status: '{db_feedback.status}'"
+    description = f"Criado feedback ID: {db_feedback.id}, Titulo: '{db_feedback.titulo}', Status: '{db_feedback.status}'"
     create_log(db, user_id, "CREATE", description)
     
     return db_feedback
@@ -64,7 +64,7 @@ def update_feedback(db: Session, feedback_id: int, feedback_data: FeedbackUpdate
         }
         
         description = (
-            f"Updated Feedback ID {feedback_id}. Changes: "
+            f"Atualizado feedback ID {feedback_id}. Mudanças: "
             + ", ".join(
                 f"{key}: '{old_values[key]}' -> '{updated_values[key]}'"
                 for key in old_values if old_values[key] != updated_values[key]
@@ -80,7 +80,7 @@ def delete_feedback(db: Session, feedback_id: int, user_id: int) -> Optional[Fee
     db_feedback = db.query(Feedback).filter(Feedback.id == feedback_id).first()
     if db_feedback:
         # Log the deletion action before deleting
-        description = f"Deleted Feedback ID {db_feedback.id}, Title: '{db_feedback.titulo}', Status: '{db_feedback.status}'"
+        description = f"Deletado feedback ID {db_feedback.id}, Titulo: '{db_feedback.titulo}', Status: '{db_feedback.status}'"
         create_log(db, user_id, "DELETE", description)
         
         # Delete the feedback
