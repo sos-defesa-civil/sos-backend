@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from app.cruds.ocorrencia import create_ocorrencia, get_ocorrencias_map, get_ocorrencias_list, get_ocorrencia, update_ocorrencia, delete_ocorrencia
 from app.cruds.curtida import create_curtida, delete_curtida
-from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, Bounds
+from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, OcorrenciaListResponse
 from app.schemas.curtida import CurtidaCreate, CurtidaResponse
 from app.auth.token import get_current_user
 from app.models.usuario import Usuario
@@ -28,7 +28,7 @@ def read_ocorrencias_map_route(
     db: Session = Depends(get_db)):
     return get_ocorrencias_map(db, ne_lat, ne_lng, sw_lat, sw_lng)
 
-@router.get("/ocorrencias/list/", response_model=List[OcorrenciaResponse])
+@router.get("/ocorrencias/list/", response_model=OcorrenciaListResponse)
 def read_ocorrencias_list_route(
     db: Session = Depends(get_db),
     bairro: Optional[str] = None,

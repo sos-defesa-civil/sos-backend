@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
 from app.models.midia import Midia
-from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse
+from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, OcorrenciaListResponse
 from app.cruds.registro import create_log
 from typing import List, Optional
 from sqlalchemy import func
@@ -57,34 +57,37 @@ def get_ocorrencias_list(
     data_fim: Optional[str],
     limit: int,
     offset: int
-) -> List[OcorrenciaResponse]:
+) -> OcorrenciaListResponse:
     
     # Consulta base com join para contar as curtidas e midias
-    query = db.query(
+    base_query = db.query(
         Ocorrencia,
         func.count(Curtida.id).label("curtidas_count"),
         func.count(Midia.id).label("midias_count")
     ).outerjoin(Ocorrencia.curtidas).outerjoin(Ocorrencia.midias).group_by(Ocorrencia.id)
     
     if bairro:
-        query = query.filter(Ocorrencia.bairro == bairro)
+        base_query = base_query.filter(Ocorrencia.bairro == bairro)
     
     if tipo:
-        query = query.filter(Ocorrencia.tipo == tipo)
+        base_query = base_query.filter(Ocorrencia.tipo == tipo)
     
     if data_inicio and data_fim:
-        query = query.filter(Ocorrencia.data_registro.between(data_inicio, data_fim))
+        base_query = base_query.filter(Ocorrencia.data_registro.between(data_inicio, data_fim))
     elif data_inicio:
-        query = query.filter(Ocorrencia.data_registro >= data_inicio)
+        base_query = base_query.filter(Ocorrencia.data_registro >= data_inicio)
     elif data_fim:
-        query = query.filter(Ocorrencia.data_registro <= data_fim)
+        base_query = base_query.filter(Ocorrencia.data_registro <= data_fim)
 
-    query = query.offset(offset).limit(limit)
+    # Get total count before pagination
+    total = base_query.count()
 
+    # Apply pagination
+    query = base_query.offset(offset).limit(limit)
     ocorrencias = query.all()
 
     # Converta os resultados para uma lista de OcorrenciaResponse
-    result = [
+    results = [
         OcorrenciaResponse(
             **ocorrencia.__dict__,
             curtidas_count=curtidas_count,
@@ -93,7 +96,10 @@ def get_ocorrencias_list(
         for ocorrencia, curtidas_count, midias_count in ocorrencias
     ]
 
-    return result
+    return {
+        "results": results,
+        "count": total
+    }
 
 def get_ocorrencia(db: Session, ocorrencia_id: int) -> OcorrenciaResponse:
     result = db.query(

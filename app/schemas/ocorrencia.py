@@ -37,6 +37,11 @@ class OcorrenciaResponse(OcorrenciaBase):
         from_attributes = True
 
 
+class OcorrenciaListResponse(BaseModel):
+    results: List[OcorrenciaResponse]
+    count: int
+
+
 class Bounds(BaseModel):
     ne_lat: Latitude
     ne_lng: Longitude
