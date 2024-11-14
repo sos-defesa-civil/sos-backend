@@ -1,115 +1,114 @@
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
-from app.models.usuario import Usuario
-from app.database import SessionLocal, engine
-from app.schemas.usuario import CidadaoCreate, FuncionarioDefesaCivilCreate, UsuarioUpdate
 from datetime import datetime
+from app.models.usuario import Usuario, Cidadao, Funcionario_Defesa_Civil
+from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, CidadaoCreate, FuncionarioDefesaCivilCreate
+from app.cruds.usuario import (
+    create_cidadao, create_funcionario, get_usuario, get_usuarios, 
+    update_usuario, delete_usuario, create_base_usuario
+)
+from app.auth.password import verify_password
 
-client = TestClient(app)
+# Teste para criar um usuário base
+def test_create_base_usuario(db):
+    usuario_data = UsuarioCreate(
+        nome="João Silva",
+        data_nascimento=datetime(1990, 5, 15),
+        cpf="12345678900",
+        email="joao@example.com",
+        senha="senha_segura",
+        admin=False
+    )
+    usuario = create_base_usuario(db, usuario_data)
 
-# Criação do banco de dados de teste e sessão de teste
-@pytest.fixture(scope="module")
-def setup_db():
-    # Cria o banco de dados de teste
-    db = SessionLocal()
-    # Certifique-se de que as tabelas sejam criadas
-    Usuario.metadata.create_all(bind=engine)
-    yield db
-    db.close()
-    # Limpeza do banco de dados após os testes
-    Usuario.metadata.drop_all(bind=engine)
+    assert usuario.id is not None
+    assert usuario.nome == "João Silva"
+    assert usuario.cpf == "12345678900"
+    assert usuario.email == "joao@example.com"
+    assert usuario.senha != "senha_segura"  # Senha deve estar hasheada
 
-# Teste de criação de Cidadão
-def test_create_cidadao(setup_db):
-    cidadao_data = {
-        "nome": "João Silva",
-        "data_nascimento": "1990-05-10T00:00:00",
-        "cpf": "12345678901",
-        "email": "joao@teste.com",
-        "senha": "senha123",
-        "endereco": "Rua A, 123",
-        "telefone": "1234567890",
-        "celular": "9876543210"
-    }
+# Teste para criar um Cidadão
+def test_create_cidadao(db):
+    cidadao_data = CidadaoCreate(
+        nome="Ana Souza",
+        data_nascimento=datetime(1985, 3, 20),
+        cpf="98765432100",
+        email="ana@example.com",
+        senha="senha_cidadao",
+        admin=False,
+        endereco="Rua Principal, 123",
+        num_ocorrencias_registradas=5,
+        telefone="(11) 2345-6789",
+        celular="(11) 91234-5678"
+    )
+    cidadao = create_cidadao(db, cidadao_data)
 
-    response = client.post("/cidadao/", json=cidadao_data)
-    assert response.status_code == 200
-    assert response.json()["nome"] == cidadao_data["nome"]
-    assert response.json()["email"] == cidadao_data["email"]
+    assert cidadao.id is not None
+    assert cidadao.cidadao.endereco == "Rua Principal, 123"
+    assert cidadao.cidadao.num_ocorrencias_registradas == 5
 
-# Teste de criação de Funcionário Defesa Civil
-def test_create_funcionario(setup_db):
-    funcionario_data = {
-        "nome": "Carlos Souza",
-        "data_nascimento": "1985-08-20T00:00:00",
-        "cpf": "98765432100",
-        "email": "carlos@defesacivil.com",
-        "senha": "senha456",
-        "cargo": "Analista",
-        "nivel_acesso": "Alto"
-    }
+# Teste para criar um Funcionário de Defesa Civil
+def test_create_funcionario(db):
+    funcionario_data = FuncionarioDefesaCivilCreate(
+        nome="Carlos Pereira",
+        data_nascimento=datetime(1970, 8, 10),
+        cpf="11122233344",
+        email="carlos@example.com",
+        senha="senha_funcionario",
+        admin=True,
+        cargo="Coordenador",
+        nivel_acesso="Alto"
+    )
+    funcionario = create_funcionario(db, funcionario_data)
 
-    response = client.post("/funcionario/", json=funcionario_data)
-    assert response.status_code == 200
-    assert response.json()["nome"] == funcionario_data["nome"]
-    assert response.json()["email"] == funcionario_data["email"]
+    assert funcionario.id is not None
+    assert funcionario.funcionario.cargo == "Coordenador"
+    assert funcionario.funcionario.nivel_acesso == "Alto"
 
-# Teste de leitura de usuário
-def test_read_user(setup_db):
-    usuario = Usuario(nome="Mariana Lima", email="mariana@teste.com", senha="senha789", cpf="12312312312", data_nascimento=datetime.utcnow())
-    setup_db.add(usuario)
-    setup_db.commit()
+# Teste para obter um usuário por ID
+def test_get_usuario(db):
+    usuario = get_usuario(db, 1)
+    assert usuario is not None
+    assert usuario.id == 1
 
-    response = client.get(f"/usuario/{usuario.id}")
-    assert response.status_code == 200
-    assert response.json()["nome"] == usuario.nome
-    assert response.json()["email"] == usuario.email
+# Teste para obter todos os usuários
+def test_get_usuarios(db):
+    usuarios = get_usuarios(db)
+    assert len(usuarios) > 0  # Verifica que há pelo menos um usuário
 
-# Teste de atualização de usuário
-def test_update_user(setup_db):
-    usuario = Usuario(nome="Felipe Oliveira", email="felipe@teste.com", senha="senha123", cpf="32132132132", data_nascimento=datetime.utcnow())
-    setup_db.add(usuario)
-    setup_db.commit()
+# Teste para atualizar um usuário
+def test_update_usuario(db):
+    update_data = UsuarioUpdate(
+        nome="João Silva Atualizado",
+        data_nascimento=datetime(1990, 5, 15),
+        cpf="12345678900",
+        email="joao_atualizado@example.com",
+        senha="nova_senha_segura",
+        admin=True
+    )
+    usuario = update_usuario(db, 1, update_data)
 
-    updated_data = {"nome": "Felipe Oliveira Atualizado", "email": "felipe.atualizado@teste.com"}
-    response = client.put(f"/{usuario.id}", json=updated_data)
-    assert response.status_code == 200
-    assert response.json()["nome"] == updated_data["nome"]
-    assert response.json()["email"] == updated_data["email"]
+    assert usuario.nome == "João Silva Atualizado"
+    assert usuario.email == "joao_atualizado@example.com"
+    assert usuario.admin == True
 
-# Teste de login de usuário
-def test_login_user(setup_db):
-    usuario_data = {
-        "nome": "Lucas Silva",
-        "data_nascimento": "1995-12-05T00:00:00",
-        "cpf": "55555555555",
-        "email": "lucas@teste.com",
-        "senha": "senha321"
-    }
-    usuario = Usuario(**usuario_data)
-    setup_db.add(usuario)
-    setup_db.commit()
+# Teste para deletar um usuário
+def test_delete_usuario(db):
+    usuario = delete_usuario(db, 1)
+    assert usuario is not None
+    assert usuario.id == 1
+    assert get_usuario(db, 1) is None  # Verifica se o usuário foi realmente deletado
 
-    login_data = {
-        "username": "lucas@teste.com",
-        "password": "senha321"
-    }
-
-    response = client.post("/login", data=login_data)
-    assert response.status_code == 200
-    assert "access_token" in response.json()
-
-# Teste de exclusão de usuário
-def test_delete_user(setup_db):
-    usuario = Usuario(nome="Tatiane Silva", email="tatiane@teste.com", senha="senha987", cpf="66666666666", data_nascimento=datetime.utcnow())
-    setup_db.add(usuario)
-    setup_db.commit()
-
-    response = client.delete(f"/{usuario.id}")
-    assert response.status_code == 200
-    assert response.json()["nome"] == usuario.nome
-
-    # Tentando ler o usuário excluído
-    response = client.get(f"/usuario/{usuario.id}")
-    assert response.status_code == 404  # Usuário não deve ser encontrado após exclusão
+# Teste de login (verifica se a senha está hasheada e corresponde ao login)
+def test_login(db):
+    senha = "senha_segura"
+    usuario_data = UsuarioCreate(
+        nome="Login Teste",
+        data_nascimento=datetime(1990, 5, 15),
+        cpf="12312312300",
+        email="login@example.com",
+        senha=senha,
+        admin=False
+    )
+    usuario = create_base_usuario(db, usuario_data)
+    
+    assert verify_password(senha, usuario.senha)  # Verifica se a senha bate com o hash
