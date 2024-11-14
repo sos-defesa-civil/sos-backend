@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from app.models.usuario import Usuario
 from app.models.session_data import SessionData
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
 
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"

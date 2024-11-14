@@ -6,8 +6,9 @@ from datetime import datetime
 from app.schemas.feedback import FeedbackResponse
 
 class OcorrenciaBase(BaseModel):
-    #TODO configurar determinar todos os tipos
-    tipo: Literal['tipo1', 'tipo2', 'tipo3'] 
+    tipo: Literal['alagamentos', 'colapso_barragens', 'colapso_edificios', 'colapso_solo', 'deslizamentos',
+                  'enxurradas', 'erosao_costeira', 'erosao_margem_fluvial', 'inundacoes', 'liberacao_quimicos',
+                  'tempestade_raios', 'tombamentos_rolamentos', 'tremor_terra'] 
     bairro: str
     descricao: str
     data_registro: datetime

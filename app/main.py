@@ -16,9 +16,9 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
-app.include_router(ocorrencia.router, prefix="/api", tags=["ocorrencia"])
-app.include_router(usuario.router, prefix="/api", tags=["usuario"])
-app.include_router(feedback.router, prefix="/api", tags=["feedback"])
-app.include_router(midia.router, prefix="/api", tags=["midia"])
-app.include_router(registro.router, prefix="/api", tags=["registro"])
-app.include_router(dashboard.router, prefix="/api", tags=["dashboard"])
+app.include_router(ocorrencia.router, prefix="/api", tags=["Ocorrência"])
+app.include_router(usuario.router, prefix="/api", tags=["Usuário"])
+app.include_router(feedback.router, prefix="/api", tags=["FeedBack"])
+app.include_router(midia.router, prefix="/api", tags=["Mídia"])
+app.include_router(registro.router, prefix="/api", tags=["Registro"])
+app.include_router(dashboard.router, prefix="/api", tags=["DashBoard"])
