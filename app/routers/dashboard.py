@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.database import get_db
 from app.schemas.dashboard import CardResponse, PieChartResponse, MonthlyPieChartResponse
-from app.cruds.dashboard import get_session_data, get_ocorrencia_data, get_curtida_data, count_ocorrencias_by_tipo, count_ocorrencias_by_tipo_per_month
+from app.repositories.dashboard import get_session_data, get_ocorrencia_data, get_curtida_data, count_ocorrencias_by_tipo, count_ocorrencias_by_tipo_per_month
 from sqlalchemy.orm import Session
 from typing import List
 

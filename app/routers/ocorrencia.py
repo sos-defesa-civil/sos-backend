@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
-from app.cruds.ocorrencia import create_ocorrencia, get_ocorrencias_map, get_ocorrencias_list, get_ocorrencia, update_ocorrencia, delete_ocorrencia
-from app.cruds.curtida import create_curtida, delete_curtida
+from app.repositories.ocorrencia import create_ocorrencia, get_ocorrencias_map, get_ocorrencias_list, get_ocorrencia, update_ocorrencia, delete_ocorrencia
+from app.repositories.curtida import create_curtida, delete_curtida
 from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, OcorrenciaListResponse
 from app.schemas.curtida import CurtidaCreate, CurtidaResponse
 from app.auth.token import get_current_user
@@ -9,7 +9,7 @@ from app.models.usuario import Usuario
 from typing import List, Optional
 from app.database import get_db
 from datetime import datetime
-from app.cruds.feedback import create_feedback
+from app.repositories.feedback import create_feedback
 from app.schemas.feedback import FeedbackCreate
 
 router = APIRouter()

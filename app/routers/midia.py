@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from app.cruds.midia import create_midia, get_midia, delete_midia, get_midias_by_oc_id
+from app.repositories.midia import create_midia, get_midia, delete_midia, get_midias_by_oc_id
 from app.database import get_db
 from app.schemas.midia import MidiaBase, MidiaResponse
 from app.models.midia import Midia

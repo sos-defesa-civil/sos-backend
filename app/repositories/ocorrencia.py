@@ -3,13 +3,13 @@ from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
 from app.models.midia import Midia
 from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, OcorrenciaListResponse
-from app.cruds.registro import create_log
+from app.repositories.registro import create_log
 from typing import List, Optional
 from sqlalchemy import func
 import json
 from app.models.feedback import Feedback
 from app.schemas.feedback import FeedbackCreate, FeedbackResponse
-from app.cruds.feedback import create_feedback
+from app.repositories.feedback import create_feedback
 
 def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate, user_id) -> Ocorrencia:
     db_ocorrencia = Ocorrencia(

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.feedback import Feedback  # Assuming you have a Feedback model in `app.models.feedback`
 from app.schemas.feedback import FeedbackCreate, FeedbackUpdate, FeedbackResponse
-from app.cruds.registro import create_log
+from app.repositories.registro import create_log
 from typing import List, Optional
 
 def create_feedback(db: Session, feedback: FeedbackCreate, user_id: int) -> Feedback:

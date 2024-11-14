@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from app.database import get_db
 from app.schemas.registro import RegistroResponse
 from app.models.registro import Registro
-from app.cruds.registro import get_logs
+from app.repositories.registro import get_logs
 from sqlalchemy.orm import Session
 from typing import List
 

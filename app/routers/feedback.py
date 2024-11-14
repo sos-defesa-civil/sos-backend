@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.schemas.feedback import FeedbackCreate, FeedbackResponse, FeedbackUpdate
-from app.cruds.feedback import create_feedback, get_feedback, get_feedback_list, update_feedback, delete_feedback
+from app.repositories.feedback import create_feedback, get_feedback, get_feedback_list, update_feedback, delete_feedback
 from app.database import get_db
 from app.auth.token import get_current_user
 from app.models.usuario import Usuario
