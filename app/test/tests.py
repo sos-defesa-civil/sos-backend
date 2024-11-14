@@ -37,7 +37,8 @@ def test_create_usuario(db):
 
 # Testa a recuperação de usuário
 def test_read_usuario(db):
-    response = client.get("/api/1")  # Assumindo que existe usuário com ID 1
+    
+    response = client.get("/api/usuario/1")  # Assumindo que existe usuário com ID 1
     assert response.status_code == 200
     assert "nome" in response.json()
 
