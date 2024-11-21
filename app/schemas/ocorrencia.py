@@ -29,6 +29,8 @@ class OcorrenciaUpdate(OcorrenciaBase):
 
 class OcorrenciaResponse(OcorrenciaBase):
     id: int
+    username: str
+    status: Optional[str] = "open"
     curtidas_count: Optional[int] = 0
     midias_count: Optional[int] = 0
     midias: Optional[List[str]] = []
