@@ -114,7 +114,7 @@ def read_user(usuario_id: int, db: Session = Depends(get_db)):
         "2. Valida se a senha fornecida está correta.\n"
         "3. Gera um token de acesso JWT para o usuário autenticado.\n"
         "4. Salva os dados de sessão no banco de dados.\n"
-        "5. Retorna o token gerado.\n"
+        "5. Retorna o token gerado."
     ),
     responses={
         401: {
