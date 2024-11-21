@@ -111,5 +111,31 @@ def delete_ocorrencia_route(ocorrencia_id: int, db: Session = Depends(get_db), c
     description="Adiciona uma curtida a uma ocorrência específica.")
 def add_curtida_route(curtida: CurtidaCreate, db: Session = Depends(get_db)):
     curtida = create_curtida(db, curtida)
-    
+
     return curtida
+
+
+@router.post("/ocorrencia/{ocorrencia_id}/finalizar", response_model=OcorrenciaResponse)
+def finalize_ocorrencia_route(
+    ocorrencia_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    # Create finalization feedback
+    feedback = FeedbackCreate(
+        titulo="Ocorrência Finalizada",
+        descricao="Ocorrência finalizada pelo sistema",
+        status="finished",
+        data_registro=datetime.now(),
+        user_id=current_user.id,
+        oc_id=ocorrencia_id,
+    )
+
+    # Create the feedback
+    create_feedback(db, feedback, current_user.id)
+
+    # Get and return the updated ocorrencia
+    db_ocorrencia = get_ocorrencia(db, ocorrencia_id)
+    if db_ocorrencia is None:
+        raise HTTPException(status_code=404, detail="Ocorrência não encontrada")
+    return db_ocorrencia

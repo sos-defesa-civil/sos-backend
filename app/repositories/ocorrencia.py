@@ -10,8 +10,9 @@ import json
 from app.models.feedback import Feedback
 from app.schemas.feedback import FeedbackCreate, FeedbackResponse
 from app.repositories.feedback import create_feedback
+from app.models.usuario import Usuario
 
-def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate, user_id) -> Ocorrencia:
+def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate, user_id) -> OcorrenciaResponse:
     db_ocorrencia = Ocorrencia(
         user_id=user_id,
         tipo=ocorrencia.tipo,
@@ -41,7 +42,25 @@ def create_ocorrencia(db: Session, ocorrencia: OcorrenciaCreate, user_id) -> Oco
     description = f"Criado ocorrencia ID: {db_ocorrencia.id}, {db_ocorrencia}"
     create_log(db, user_id, "CREATE", description)
     
-    return db_ocorrencia
+    # Get username for response
+    usuario = db.query(Usuario).filter(Usuario.id == user_id).first()
+    
+    return OcorrenciaResponse(
+        id=db_ocorrencia.id,
+        user_id=db_ocorrencia.user_id,
+        tipo=db_ocorrencia.tipo,
+        bairro=db_ocorrencia.bairro,
+        descricao=db_ocorrencia.descricao,
+        data_registro=db_ocorrencia.data_registro,
+        ultima_atualizacao=db_ocorrencia.ultima_atualizacao,
+        latitude=db_ocorrencia.latitude,
+        longitude=db_ocorrencia.longitude,
+        username=usuario.nome,
+        curtidas_count=0,
+        midias_count=0,
+        midias=[],
+        feedbacks=[]
+    )
 
 def get_ocorrencias_map(db: Session, ne_lat: float, ne_lng: float, sw_lat: float, sw_lng: float) -> List[Ocorrencia]:
     return db.query(Ocorrencia).filter(
@@ -58,20 +77,39 @@ def get_ocorrencias_list(
     limit: int,
     offset: int
 ) -> OcorrenciaListResponse:
-    
-    # Consulta base com join para contar as curtidas e midias
+
+    # Subquery to get the latest feedback for each occurrence
+    latest_feedback = db.query(
+        Feedback.oc_id,
+        Feedback.status.label('last_status'),
+        func.max(Feedback.data_registro).label('max_data')
+    ).group_by(
+        Feedback.oc_id
+    ).subquery()
+
+    # Main query
     base_query = db.query(
         Ocorrencia,
         func.count(Curtida.id).label("curtidas_count"),
-        func.count(Midia.id).label("midias_count")
-    ).outerjoin(Ocorrencia.curtidas).outerjoin(Ocorrencia.midias).group_by(Ocorrencia.id)
-    
+        func.count(Midia.id).label("midias_count"),
+        Usuario.nome.label("nome"),
+        latest_feedback.c.last_status
+    ).outerjoin(Ocorrencia.curtidas)\
+    .outerjoin(Ocorrencia.midias)\
+    .join(Usuario, Ocorrencia.user_id == Usuario.id)\
+    .outerjoin(latest_feedback, Ocorrencia.id == latest_feedback.c.oc_id)\
+    .group_by(
+        Ocorrencia.id, 
+        Usuario.nome, 
+        latest_feedback.c.last_status
+    ).order_by(Ocorrencia.data_registro.desc())
+
     if bairro:
         base_query = base_query.filter(Ocorrencia.bairro == bairro)
-    
+
     if tipo:
         base_query = base_query.filter(Ocorrencia.tipo == tipo)
-    
+
     if data_inicio and data_fim:
         base_query = base_query.filter(Ocorrencia.data_registro.between(data_inicio, data_fim))
     elif data_inicio:
@@ -86,15 +124,22 @@ def get_ocorrencias_list(
     query = base_query.offset(offset).limit(limit)
     ocorrencias = query.all()
 
-    # Converta os resultados para uma lista de OcorrenciaResponse
-    results = [
-        OcorrenciaResponse(
-            **ocorrencia.__dict__,
-            curtidas_count=curtidas_count,
-            midias_count=midias_count
+    # Convert results to OcorrenciaResponse list
+    results = []
+    for ocorrencia, curtidas_count, midias_count, nome, last_status in ocorrencias:
+        feedbacks = db.query(Feedback).filter(Feedback.oc_id == ocorrencia.id).all()
+        feedback_responses = [FeedbackResponse.from_orm(feedback) for feedback in feedbacks]
+        results.append(
+            OcorrenciaResponse(
+                **ocorrencia.__dict__,
+                curtidas_count=curtidas_count,
+                midias_count=midias_count,
+                username=nome,
+                status=last_status or "open",
+                midias=[],
+                feedbacks=feedback_responses
+            )
         )
-        for ocorrencia, curtidas_count, midias_count in ocorrencias
-    ]
 
     return {
         "results": results,
@@ -105,18 +150,22 @@ def get_ocorrencia(db: Session, ocorrencia_id: int) -> OcorrenciaResponse:
     result = db.query(
         Ocorrencia,
         func.count(Curtida.id).label("curtidas_count"),
-        func.count(Midia.id).label("midias_count")
-    ).outerjoin(Ocorrencia.curtidas).outerjoin(Ocorrencia.midias)\
+        func.count(Midia.id).label("midias_count"),
+        Usuario.nome.label("username")
+    ).outerjoin(Ocorrencia.curtidas)\
+    .outerjoin(Ocorrencia.midias)\
+    .join(Usuario, Ocorrencia.user_id == Usuario.id)\
     .filter(Ocorrencia.id == ocorrencia_id)\
-    .group_by(Ocorrencia.id).first()
+    .group_by(Ocorrencia.id, Usuario.nome).first()
 
     if result:
-        ocorrencia, curtidas_count, midias_count = result
+        ocorrencia, curtidas_count, midias_count, username = result
         midias = db.query(Midia).filter(Midia.oc_id == ocorrencia_id).all()
         feedbacks = db.query(Feedback).filter(Feedback.oc_id == ocorrencia_id).all()
         
         return OcorrenciaResponse(
             **ocorrencia.__dict__,
+            username=username,
             curtidas_count=curtidas_count,
             midias_count=midias_count,
             midias=[f"/api/midia/file/{midia.id}" for midia in midias],
@@ -177,30 +226,21 @@ def delete_ocorrencia(db: Session, ocorrencia_id: int, user_id: int) -> Ocorrenc
         result = db.query(
             Ocorrencia,
             func.count(Curtida.id).label("curtidas_count"),
-            func.count(Midia.id).label("midias_count")
-        ).outerjoin(Ocorrencia.curtidas).outerjoin(Ocorrencia.midias)\
+            func.count(Midia.id).label("midias_count"),
+            Usuario.nome.label("username")
+        ).outerjoin(Ocorrencia.curtidas)\
+        .outerjoin(Ocorrencia.midias)\
+        .join(Usuario, Ocorrencia.user_id == Usuario.id)\
         .filter(Ocorrencia.id == ocorrencia_id)\
-        .group_by(Ocorrencia.id).first()
+        .group_by(Ocorrencia.id, Usuario.nome).first()
 
-        ocorrencia, curtidas_count, midias_count = result
+        ocorrencia, curtidas_count, midias_count, username = result
         midias = db.query(Midia).filter(Midia.oc_id == ocorrencia_id).all()
         feedbacks = db.query(Feedback).filter(Feedback.oc_id == ocorrencia_id).all()
 
-        # Create the response before deletion
-        ocorrencia_dict = {
-            'id': ocorrencia.id,
-            'user_id': ocorrencia.user_id,
-            'tipo': ocorrencia.tipo,
-            'bairro': ocorrencia.bairro,
-            'descricao': ocorrencia.descricao,
-            'data_registro': ocorrencia.data_registro,
-            'ultima_atualizacao': ocorrencia.ultima_atualizacao,
-            'latitude': ocorrencia.latitude,
-            'longitude': ocorrencia.longitude
-        }
-
         response = OcorrenciaResponse(
-            **ocorrencia_dict,
+            **ocorrencia.__dict__,
+            username=username,
             curtidas_count=curtidas_count,
             midias_count=midias_count,
             midias=[f"/api/midia/file/{midia.id}" for midia in midias],
