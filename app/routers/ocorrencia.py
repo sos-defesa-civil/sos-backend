@@ -115,7 +115,16 @@ def add_curtida_route(curtida: CurtidaCreate, db: Session = Depends(get_db)):
     return curtida
 
 
-@router.post("/ocorrencia/{ocorrencia_id}/finalizar", response_model=OcorrenciaResponse)
+@router.post("/ocorrencia/{ocorrencia_id}/finalizar", 
+    response_model=OcorrenciaResponse,
+    summary="Finalizar ocorrêcia",
+    description="Esta rota permite finalizar uma ocorrência específica no sistema. "
+        "Ao finalizar, um feedback automático é gerado com o status 'finished'. "
+        "O feedback é vinculado ao usuário atual e à ocorrência correspondente."
+        "\n\n"
+        "### Processos executados:\n"
+        "1. Criação de um feedback automático para registrar a finalização.\n"
+        "2. Atualização e retorno dos dados da ocorrência finalizada.")
 def finalize_ocorrencia_route(
     ocorrencia_id: int,
     db: Session = Depends(get_db),
