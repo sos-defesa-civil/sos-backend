@@ -1,114 +1,110 @@
-from fastapi.testclient import TestClient
-from app.main import app
-from unittest.mock import MagicMock
-from app.cruds.dashboard import get_session_data, get_ocorrencia_data, get_curtida_data, count_ocorrencias_by_tipo, count_ocorrencias_by_tipo_per_month
+import pytest
+from datetime import datetime, timedelta
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.database import Base
+from app.models.ocorrencia import Ocorrencia
+from app.models.curtida import Curtida
+from app.models.session_data import SessionData
+from app.cruds.dashboard import (
+    get_session_data,
+    get_ocorrencia_data,
+    get_curtida_data,
+    count_ocorrencias_by_tipo,
+    count_ocorrencias_by_tipo_per_month,
+)
 
-client = TestClient(app)
+# Configuração do banco de dados de testes em memória
+@pytest.fixture
+def db_session():
+    engine = create_engine("sqlite:///:memory:")
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-def test_ocorrencias_card():
-    # Mock da função que consulta os dados do banco
-    mock_get_ocorrencia_data = MagicMock()
-    mock_get_ocorrencia_data.return_value = {
-        "total": 100,
-        "today": 10,
-        "yesterdayPercent": 5,
-        "lastWeekPercent": -3
-    }
-    
-    # Substitui a função original por nossa versão mockada
-    app.dependency_overrides[get_ocorrencia_data] = mock_get_ocorrencia_data
-    
-    response = client.get("/dashboard/ocorrencias-card")
-    
-    # Verifica se a resposta está conforme esperado
-    assert response.status_code == 200
-    assert response.json() == {
-        "total": 100,
-        "today": 10,
-        "yesterdayPercent": 5,
-        "lastWeekPercent": -3
-    }
+# Função auxiliar para criar dados fictícios
+def create_mock_data(db_session):
+    # Criando duas ocorrências para garantir dados suficientes
+    mock_ocorrencia_1 = Ocorrencia(
+        user_id=1,
+        tipo="Incêndio",
+        bairro="Centro",
+        descricao="Incêndio próximo à praça",
+        data_registro=datetime.now() - timedelta(days=1),
+        ultima_atualizacao=datetime.now(),
+        latitude=-9.6640,
+        longitude=-35.7385
+    )
+    mock_ocorrencia_2 = Ocorrencia(
+        user_id=2,
+        tipo="Inundação",
+        bairro="Praia",
+        descricao="Inundação na área da praia",
+        data_registro=datetime.now() - timedelta(days=2),
+        ultima_atualizacao=datetime.now(),
+        latitude=-9.6645,
+        longitude=-35.7390
+    )
+    mock_ocorrencia_3 = Ocorrencia(
+        user_id=3,
+        tipo="Incêndio",
+        bairro="Jatiúca",
+        descricao="Incêndio em área residencial",
+        data_registro=datetime.now() - timedelta(days=3),
+        ultima_atualizacao=datetime.now(),
+        latitude=-9.6530,
+        longitude=-35.7270
+    )
 
-def test_sessoes_card():
-    mock_get_session_data = MagicMock()
-    mock_get_session_data.return_value = {
-        "total": 500,
-        "today": 50,
-        "yesterdayPercent": 10,
-        "lastWeekPercent": 2
-    }
+    mock_curtida_1 = Curtida(
+        user_id=1,
+        ocorrencia_id=1,
+        data_registro = datetime.now()
+    )
     
-    app.dependency_overrides[get_session_data] = mock_get_session_data
-    
-    response = client.get("/dashboard/sessions-card")
-    
-    assert response.status_code == 200
-    assert response.json() == {
-        "total": 500,
-        "today": 50,
-        "yesterdayPercent": 10,
-        "lastWeekPercent": 2
-    }
 
-def test_curtidas_card():
-    mock_get_curtida_data = MagicMock()
-    mock_get_curtida_data.return_value = {
-        "total": 300,
-        "today": 30,
-        "yesterdayPercent": -2,
-        "lastWeekPercent": 7
-    }
-    
-    app.dependency_overrides[get_curtida_data] = mock_get_curtida_data
-    
-    response = client.get("/dashboard/curtidas-card")
-    
-    assert response.status_code == 200
-    assert response.json() == {
-        "total": 300,
-        "today": 30,
-        "yesterdayPercent": -2,
-        "lastWeekPercent": 7
-    }
+# Teste para o Card de Sessões
+def test_get_session_data(db_session):
+    create_mock_data(db_session)
+    result = get_session_data(db_session)
+    assert result.total == 3  # Agora temos 3 ocorrências
+    assert result.today > 0
+    assert isinstance(result.yesterdayPercent, float)
+    assert isinstance(result.lastWeekPercent, float)
 
-def test_pie_chart():
-    mock_count_ocorrencias_by_tipo = MagicMock()
-    mock_count_ocorrencias_by_tipo.return_value = {
-        "data": [
-            {"tipo": "Incêndio", "count": 50},
-            {"tipo": "Alagamento", "count": 30}
-        ]
-    }
-    
-    app.dependency_overrides[count_ocorrencias_by_tipo] = mock_count_ocorrencias_by_tipo
-    
-    response = client.get("/dashboard/pie-chart")
-    
-    assert response.status_code == 200
-    assert response.json() == {
-        "data": [
-            {"tipo": "Incêndio", "count": 50},
-            {"tipo": "Alagamento", "count": 30}
-        ]
-    }
+# Teste para o Card de Ocorrências
+def test_get_ocorrencia_data(db_session):
+    create_mock_data(db_session)
+    result = get_ocorrencia_data(db_session)
+    assert result.total == 3  # Agora temos 3 ocorrências
+    assert result.today == 1  # Uma ocorrência foi registrada hoje
+    assert isinstance(result.yesterdayPercent, float)
+    assert isinstance(result.lastWeekPercent, float)
 
-def test_monthly_chart():
-    mock_count_ocorrencias_by_tipo_per_month = MagicMock()
-    mock_count_ocorrencias_by_tipo_per_month.return_value = {
-        "data": [
-            {"tipo": "Incêndio", "year": 2024, "month": 1, "count": 20},
-            {"tipo": "Alagamento", "year": 2024, "month": 2, "count": 15}
-        ]
-    }
-    
-    app.dependency_overrides[count_ocorrencias_by_tipo_per_month] = mock_count_ocorrencias_by_tipo_per_month
-    
-    response = client.get("/dashboard/monthly-chart")
-    
-    assert response.status_code == 200
-    assert response.json() == {
-        "data": [
-            {"tipo": "Incêndio", "year": 2024, "month": 1, "count": 20},
-            {"tipo": "Alagamento", "year": 2024, "month": 2, "count": 15}
-        ]
-    }
+# Teste para o Card de Curtidas
+def test_get_curtida_data(db_session):
+    create_mock_data(db_session)
+    result = get_curtida_data(db_session)
+    assert result.total == 1  # Uma curtida foi registrada
+    assert result.today == 1  # Curtida registrada hoje
+    assert isinstance(result.yesterdayPercent, float)
+    assert isinstance(result.lastWeekPercent, float)
+
+# Teste para o gráfico de pizza (PieChart)
+def test_count_ocorrencias_by_tipo(db_session):
+    create_mock_data(db_session)
+    result = count_ocorrencias_by_tipo(db_session)
+    assert len(result.data) == 2  # Agora temos dois tipos: "Incêndio" e "Inundação"
+    assert any(item.tipo == "Incêndio" and item.count == 2 for item in result.data)
+    assert any(item.tipo == "Inundação" and item.count == 1 for item in result.data)
+
+# Teste para o gráfico mensal (Monthly Chart)
+def test_count_ocorrencias_by_tipo_per_month(db_session):
+    create_mock_data(db_session)
+    result = count_ocorrencias_by_tipo_per_month(db_session)
+    assert len(result.data) > 0  # Deve haver dados agrupados por tipo e mês
+    assert all(item.year == datetime.now().year for item in result.data)

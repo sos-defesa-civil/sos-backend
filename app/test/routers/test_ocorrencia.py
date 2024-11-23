@@ -3,6 +3,8 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.schemas.ocorrencia import OcorrenciaCreate
 from app.database import SessionLocal
+from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, CidadaoCreate, FuncionarioDefesaCivilCreate
+from datetime import datetime
 
 client = TestClient(app)
 
@@ -12,41 +14,69 @@ def setup_db():
     yield db
     db.close()
 
+usuario_data = {
+        "nome": "Test User",
+        "data_nascimento": "2000-01-01",
+        "cpf": "12345678901",
+        "email": "test@example.com",
+        "senha": "password",
+        "admin": False,
+        "endereco": "123 Test St",
+        "num_ocorrencias_registradas": 0,
+        "telefone": "1234567890",
+        "celular": "0987654321"
+    }
+# Create Usuario
+client.post("/api/cidadao/", json=usuario_data)
+
+# Create Login
+response = client.post("/api/login/", data={"username": "test@example.com", "password": "password"})
+token = response.json()["access_token"]
+
+
 def test_create_ocorrencia(setup_db):
     ocorrencia_data = {
-        "titulo": "Ocorrência Teste",
-        "descricao": "Descrição da ocorrência de teste",
-        "bairro": "Centro",
-        "tipo": "Incidente",
-        "data_inicio": "2024-11-14T10:00:00",
-        "data_fim": "2024-11-14T12:00:00"
+    "tipo": "tipo3",
+    "bairro": "bairro1",
+    "descricao": "Incident description tipo 3",
+    "data_registro": "2024-10-01T13:00:00",
+    "ultima_atualizacao": "2024-10-24T14:00:00",
+    "user_id": 1,
+    "latitude": 40.73061,
+    "longitude": -73.935242
     }
     
-    response = client.post("/ocorrencia/", json=ocorrencia_data)
+    response = client.post("api/ocorrencia/", json=ocorrencia_data, headers={"Authorization": f"Bearer {token}"})
+
     assert response.status_code == 200
-    assert response.json()["titulo"] == ocorrencia_data["titulo"]
+    assert response.json()["descricao"] == ocorrencia_data["descricao"]
+
+    return response.json()["id"]
+
+id_ocorrencia = test_create_ocorrencia(setup_db)
 
 def test_read_ocorrencia(setup_db):
-    response = client.get("/ocorrencia/1")
+    response = client.get(f"api/ocorrencia/{id_ocorrencia}")
     assert response.status_code == 200
-    assert "titulo" in response.json()
+    assert "descricao" in response.json()
 
 def test_update_ocorrencia(setup_db):
     ocorrencia_update = {
-        "titulo": "Ocorrência Atualizada",
-        "descricao": "Descrição atualizada da ocorrência",
-        "bairro": "Centro",
-        "tipo": "Incidente",
-        "data_inicio": "2024-11-14T10:00:00",
-        "data_fim": "2024-11-14T12:00:00"
+        "tipo": "tipo3",
+        "bairro": "bairro1",
+        "descricao": "Updated",
+        "data_registro": "2024-10-01T13:00:00",
+        "ultima_atualizacao": "2024-10-24T14:00:00",
+        "user_id": 1,
+        "latitude": 40.73061,
+        "longitude": -73.935242
     }
-    
-    response = client.put("/ocorrencia/1", json=ocorrencia_update)
+
+    response = client.put(f"api/ocorrencia/{id_ocorrencia}", json=ocorrencia_update, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
-    assert response.json()["titulo"] == ocorrencia_update["titulo"]
+    assert response.json()["descricao"] == ocorrencia_update["descricao"]
 
 def test_delete_ocorrencia(setup_db):
-    response = client.delete("/ocorrencia/1")
+    response = client.delete(f"api/ocorrencia/{id_ocorrencia}", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
-    assert response.json()["status"] == "deleted"
 

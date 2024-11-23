@@ -1,67 +1,110 @@
-import pytest
-from sqlalchemy.orm import Session
-from app.models.usuario import Usuario
-from app.cruds.registro import create_log, get_logs
-from app.schemas.registro import RegistroResponse
-from app.database import Base, engine
 from datetime import datetime
+from app.models.usuario import Usuario, Cidadao, Funcionario_Defesa_Civil
+from app.models.registro import Registro
+from app.cruds.registro import create_log, get_logs
+
+import pytest
 
 
-# Criação de um banco de dados de teste
-@pytest.fixture(scope="module")
-def db():
-    # Criando as tabelas no banco de dados de teste
-    Base.metadata.create_all(bind=engine)
-    db_session = Session(bind=engine)
-    yield db_session
-    # Limpeza após os testes
-    db_session.close()
-    Base.metadata.drop_all(bind=engine)
+# Fixture para limpar o banco de dados antes de cada teste
+@pytest.fixture(scope="function")
+def clean_db(db):
+    # Limpa as tabelas do banco de dados
+    db.query(Registro).delete()
+    db.query(Usuario).delete()
+    db.commit()
+    yield db  # Retorna o banco de dados para o teste
+    # Após o teste, você pode realizar outras limpezas ou commits, se necessário
+    db.query(Registro).delete()
+    db.query(Usuario).delete()
+    db.commit()
 
+
+# Helper para adicionar usuários no banco
+def add_test_users(db):
+    # Criação de usuários com informações completas
+    users = [
+        Usuario(
+            nome="Usuário Teste 1",
+            data_nascimento=datetime(1990, 1, 1),
+            cpf="000.000.000-01",
+            email="teste1@example.com",
+            senha="senha1",
+            admin=False,
+            cidadao=Cidadao(
+                endereco="Rua A, 123",
+                telefone="(82) 1234-5678",
+                celular="(82) 98765-4321"
+            )
+        ),
+        Usuario(
+            nome="Usuário Teste 2",
+            data_nascimento=datetime(1985, 5, 15),
+            cpf="000.000.000-02",
+            email="teste2@example.com",
+            senha="senha2",
+            admin=True,
+            funcionario=Funcionario_Defesa_Civil(
+                cargo="Analista de TI",
+                nivel_acesso="Alto"
+            )
+        ),
+    ]
+    db.add_all(users)
+    db.commit()
 
 # Teste para criar um log
-def test_create_log(db: Session):
-    # Criação de um usuário de teste
-    usuario = Usuario(nome="Test User", email="test@example.com", cpf="12312312300", senha="hashed_password", admin=False)
-    db.add(usuario)
-    db.commit()
-    db.refresh(usuario)
+def test_create_log(db):
+    # Adiciona usuários necessários
+    add_test_users(db)
 
-    # Criação de um log de teste
-    log_type = "LOGIN"
-    log_description = "User logged in"
-    new_log = create_log(db, usuario.id, log_type, log_description)
-
-    # Verifica se o log foi criado corretamente
-    assert new_log is not None
-    assert new_log.tipo == log_type
-    assert new_log.descricao == log_description
-    assert new_log.user_id == usuario.id
-
+    # Cria um log
+    log = create_log(db, user_id=1, log_type="INFO", log_description="Teste de log")
+    
+    # Verifica se foi criado corretamente
+    assert log.id is not None
+    assert log.user_id == 1
+    assert log.tipo == "INFO"
+    assert log.descricao == "Teste de log"
 
 # Teste para recuperar logs
-def test_get_logs(db: Session):
-    # Criando usuário e log de teste
-    usuario = Usuario(nome="Test User", email="test2@example.com", cpf="12312312301", senha="hashed_password", admin=False)
-    db.add(usuario)
-    db.commit()
-    db.refresh(usuario)
+def test_get_logs(db):
+    # Adiciona usuários necessários
+    add_test_users(db)
 
-    # Criação de log de tipo 'SIGNUP'
-    log_type = "LOGIN"
-    log_description = "User logged in"
-    create_log(db, usuario.id, log_type, log_description)
+    # Cria logs
+    create_log(db, user_id=1, log_type="INFO", log_description="Log 1")
+    create_log(db, user_id=2, log_type="ERROR", log_description="Log 2")
 
-    # Consultando os logs
+    # Recupera logs
     logs = get_logs(db)
 
-    # Verifica se o número de logs é maior que 0
-    assert len(logs) > 0
+    # Verifica se os logs foram retornados corretamente
+    assert len(logs) == 2
+    assert logs[0]["tipo"] == "INFO"
+    assert logs[0]["username"] == "Usuário Teste 1"
+    assert logs[1]["tipo"] == "ERROR"
+    assert logs[1]["username"] == "Usuário Teste 2"
 
-    # Verifica se o log retornado tem os dados corretos
-    assert logs[0]["username"] == usuario.nome
-    assert logs[0]["tipo"] == log_type
-    assert logs[0]["descricao"] == log_description
+# Teste para o endpoint
+def test_get_logs_endpoint(client, db):
+    # Adiciona usuários necessários
+    add_test_users(db)
 
-    assert logs[0]["tipo"] == "LOGIN"
+    # Cria logs
+    create_log(db, user_id=1, log_type="INFO", log_description="Log Endpoint Test")
+    create_log(db, user_id=2, log_type="WARNING", log_description="Outro Log Test")
+
+    # Faz a requisição ao endpoint
+    response = client.get("/registro")
+
+    # Verifica a resposta
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["tipo"] == "INFO"
+    assert data[0]["descricao"] == "Log Endpoint Test"
+    assert data[1]["tipo"] == "WARNING"
+    assert data[1]["descricao"] == "Outro Log Test"
+
 
