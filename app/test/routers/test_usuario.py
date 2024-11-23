@@ -89,7 +89,7 @@ def test_get_usuario():
 
 # Teste para obter todos os usuários
 def test_get_usuarios():
-    response = client.get("/api/usuario/")
+    response = client.get("/api/")
     
     assert response.status_code == 200
     response_data = response.json() 
@@ -106,7 +106,7 @@ def test_update_usuario():
         "senha": "nova_senha_segura",
         "admin": True
     }
-    response = client.put(f"/api/usuario/{id}", json=update_data)
+    response = client.put(f"/api/{id}", json=update_data)
 
     assert response.status_code == 200
 
@@ -116,7 +116,7 @@ def test_update_usuario():
 
 # Teste para deletar um usuário
 def test_delete_usuario():
-    response = client.delete(f"/api/usuario/{id}")
+    response = client.delete(f"/api/{id}")
 
     # Verificações do status da resposta
     assert response.status_code == 200

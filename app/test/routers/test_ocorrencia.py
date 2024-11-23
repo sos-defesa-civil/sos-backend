@@ -1,10 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-from app.schemas.ocorrencia import OcorrenciaCreate
 from app.database import SessionLocal
-from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, CidadaoCreate, FuncionarioDefesaCivilCreate
-from datetime import datetime
 
 client = TestClient(app)
 
@@ -29,14 +26,14 @@ usuario_data = {
 # Create Usuario
 client.post("/api/cidadao/", json=usuario_data)
 
-# Create Login
+# Get Login token
 response = client.post("/api/login/", data={"username": "test@example.com", "password": "password"})
 token = response.json()["access_token"]
 
 
-def test_create_ocorrencia(setup_db):
+def test_create_ocorrencia():
     ocorrencia_data = {
-    "tipo": "tipo3",
+    "tipo": "alagamentos",
     "bairro": "bairro1",
     "descricao": "Incident description tipo 3",
     "data_registro": "2024-10-01T13:00:00",
@@ -53,16 +50,16 @@ def test_create_ocorrencia(setup_db):
 
     return response.json()["id"]
 
-id_ocorrencia = test_create_ocorrencia(setup_db)
+id_ocorrencia = test_create_ocorrencia()
 
-def test_read_ocorrencia(setup_db):
+def test_read_ocorrencia():
     response = client.get(f"api/ocorrencia/{id_ocorrencia}")
     assert response.status_code == 200
     assert "descricao" in response.json()
 
-def test_update_ocorrencia(setup_db):
+def test_update_ocorrencia():
     ocorrencia_update = {
-        "tipo": "tipo3",
+        "tipo": "alagamentos",
         "bairro": "bairro1",
         "descricao": "Updated",
         "data_registro": "2024-10-01T13:00:00",
@@ -76,7 +73,7 @@ def test_update_ocorrencia(setup_db):
     assert response.status_code == 200
     assert response.json()["descricao"] == ocorrencia_update["descricao"]
 
-def test_delete_ocorrencia(setup_db):
+def test_delete_ocorrencia():
     response = client.delete(f"api/ocorrencia/{id_ocorrencia}", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
 

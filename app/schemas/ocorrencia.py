@@ -39,6 +39,8 @@ class OcorrenciaResponse(OcorrenciaBase):
     class Config:
         from_attributes = True
 
+class OcorrenciaUpdateResponse(OcorrenciaBase):
+    id: int
 
 class OcorrenciaListResponse(BaseModel):
     results: List[OcorrenciaResponse]

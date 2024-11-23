@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from app.repositories.ocorrencia import create_ocorrencia, get_ocorrencias_map, get_ocorrencias_list, get_ocorrencia, update_ocorrencia, delete_ocorrencia
 from app.repositories.curtida import create_curtida, delete_curtida
-from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, OcorrenciaListResponse
+from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, OcorrenciaListResponse, OcorrenciaUpdateResponse
 from app.schemas.curtida import CurtidaCreate, CurtidaResponse
 from app.auth.token import get_current_user
 from app.models.usuario import Usuario
@@ -86,7 +86,7 @@ def read_ocorrencia_route(ocorrencia_id: int, db: Session = Depends(get_db)):
     return db_ocorrencia
 
 @router.put("/ocorrencia/{ocorrencia_id}", 
-    response_model=OcorrenciaResponse,
+    response_model=OcorrenciaUpdateResponse,
     summary="Atualizar Ocorrência",
     description="Atualiza os detalhes de uma ocorrência específica pelo ID.")
 def update_ocorrencia_route(ocorrencia_id: int, ocorrencia: OcorrenciaCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):

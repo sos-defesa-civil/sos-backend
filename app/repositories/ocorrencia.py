@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
 from app.models.midia import Midia
-from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, OcorrenciaListResponse
+from app.schemas.ocorrencia import OcorrenciaCreate, OcorrenciaResponse, OcorrenciaListResponse, OcorrenciaUpdateResponse
 from app.repositories.registro import create_log
 from typing import List, Optional
 from sqlalchemy import func
@@ -173,7 +173,7 @@ def get_ocorrencia(db: Session, ocorrencia_id: int) -> OcorrenciaResponse:
         )
     return None
 
-def update_ocorrencia(db: Session, ocorrencia_id: int, ocorrencia: Ocorrencia, user_id: int) -> Ocorrencia:
+def update_ocorrencia(db: Session, ocorrencia_id: int, ocorrencia: Ocorrencia, user_id: int) -> OcorrenciaUpdateResponse:
     db_ocorrencia = db.query(Ocorrencia).filter(Ocorrencia.id == ocorrencia_id).first()
     
     if db_ocorrencia:
