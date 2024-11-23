@@ -63,7 +63,23 @@ def test_create_funcionario():
     
     return response.json()["id"]
 
-id = test_create_funcionario()
+def create_funcionario():
+    funcionario_data = {
+        "nome": "José Silva",
+        "data_nascimento": datetime(1970, 8, 10).isoformat(),
+        "cpf": "11122233377",
+        "email": "js@example.com",
+        "senha": "senha_funcionario",
+        "admin": True,
+        "cargo": "Dev",
+        "nivel_acesso": "Alto"
+    }
+
+    response = client.post("/api/funcionario/", json=funcionario_data)
+    
+    return response.json()["id"]
+
+id = create_funcionario()
 
 # Teste para obter um usuário por ID
 def test_get_usuario():
