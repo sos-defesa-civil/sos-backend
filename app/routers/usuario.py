@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from app.schemas.usuario import CidadaoCreate, FuncionarioDefesaCivilCreate, UsuarioUpdate, UsuarioResponse, CidadaoResponse, FuncionarioResponse, Login
+from app.schemas.usuario import CidadaoCreate, FuncionarioCreate, UsuarioUpdate, UsuarioResponse, CidadaoResponse, FuncionarioResponse
 from app.repositories.usuario import create_cidadao, create_funcionario, get_usuario, get_usuarios, update_usuario, delete_usuario
 from app.auth.password import verify_password
 from app.auth.token import create_access_token, get_current_user, create_session_data
@@ -13,7 +13,7 @@ router = APIRouter()
 # Endpoint to create a Cidadao
 @router.post(
     "/cidadao/",
-    response_model=UsuarioResponse,
+    response_model=CidadaoResponse,
     summary="Cadastrar novo usuário do tipo cidadão",
     description=(
         "Esta rota permite cadastrar um novo registro de cidadão no sistema. "
@@ -33,7 +33,7 @@ def create_cidadao_endpoint(cidadao: CidadaoCreate, db: Session = Depends(get_db
 # Endpoint to create a Funcionario_Defesa_Civil
 @router.post(
     "/funcionario/",
-    response_model=UsuarioResponse,
+    response_model=FuncionarioResponse,
     summary="Cadastrar novo usuário do tipo funcionário",
     description=(
         "Esta rota permite cadastrar um novo registro de funcionário da Defesa Civil no sistema. "
@@ -46,7 +46,7 @@ def create_cidadao_endpoint(cidadao: CidadaoCreate, db: Session = Depends(get_db
         "3. Retorna os dados do funcionário recém-criado no formato do modelo `UsuarioResponse`."
     )
 )
-def create_funcionario_endpoint(funcionario: FuncionarioDefesaCivilCreate, db: Session = Depends(get_db)):
+def create_funcionario_endpoint(funcionario: FuncionarioCreate, db: Session = Depends(get_db)):
     return create_funcionario(db, funcionario)
 @router.get(
     "/me",
@@ -149,7 +149,7 @@ async def login(
 
 # Get all users with pagination
 @router.get(
-    "/",
+    "/usuario/",
     response_model=list[UsuarioResponse],
     summary="Obter todos os usuários",
     description=(
@@ -163,7 +163,7 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
 # Update a user
 
-@router.put("/{usuario_id}", 
+@router.put("/usuario/{usuario_id}", 
     response_model=UsuarioResponse,
     summary="Atualizar um usuário", 
     description="Atualiza os dados de um usuário existente com base no ID fornecido.",
@@ -184,7 +184,7 @@ def update_user(usuario_id: int, usuario: UsuarioUpdate, db: Session = Depends(g
     return update_usuario(db, usuario_id, usuario)
 
 # Delete a user
-@router.delete("/{usuario_id}",
+@router.delete("/usuario/{usuario_id}",
     response_model=UsuarioResponse,
     summary="Deletar um usuário", 
     description="Deleta os dados de um usuário existente com base no ID fornecido.",

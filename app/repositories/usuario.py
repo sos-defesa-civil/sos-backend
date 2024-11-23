@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.usuario import Usuario, Cidadao, Funcionario_Defesa_Civil
-from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, CidadaoCreate, FuncionarioDefesaCivilCreate
+from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, CidadaoCreate, CidadaoResponse, FuncionarioCreate, FuncionarioResponse
 from app.auth.password import hash_password
 from fastapi import HTTPException
 
@@ -23,9 +23,8 @@ def create_base_usuario(db: Session, usuario_data: UsuarioCreate) -> Usuario:
     return db_usuario
 
 # Create Cidadao
-def create_cidadao(db: Session, cidadao_data: CidadaoCreate) -> Cidadao:
+def create_cidadao(db: Session, cidadao_data: CidadaoCreate) -> CidadaoResponse:
     db_usuario = create_base_usuario(db, cidadao_data)  # Create base user first
-    print(vars(db_usuario))
 
     db_cidadao = Cidadao(
         user_id=db_usuario.id,
@@ -37,11 +36,26 @@ def create_cidadao(db: Session, cidadao_data: CidadaoCreate) -> Cidadao:
     db.add(db_cidadao)
     db.commit()
     db.refresh(db_cidadao)
+    
+    cidadao = CidadaoResponse(
+        id=db_usuario.id,
 
-    return db_usuario
+        nome=db_usuario.nome,
+        data_nascimento=db_usuario.data_nascimento,
+        cpf=db_usuario.cpf,
+        email=db_usuario.email,  # You should hash the password here
+        admin=db_usuario.admin,
+        user_id=db_usuario.id,
+        endereco=db_cidadao.endereco,
+        num_ocorrencias_registradas=db_cidadao.num_ocorrencias_registradas,
+        telefone=db_cidadao.telefone,
+        celular=db_cidadao.celular
+    )
+    
+    return cidadao
 
 # Create Funcionario_Defesa_Civil
-def create_funcionario(db: Session, funcionario_data: FuncionarioDefesaCivilCreate) -> Funcionario_Defesa_Civil:
+def create_funcionario(db: Session, funcionario_data: FuncionarioCreate) -> FuncionarioResponse:
     db_usuario = create_base_usuario(db, funcionario_data)  # Create base user first
     db_funcionario = Funcionario_Defesa_Civil(
         user_id=db_usuario.id,
@@ -51,7 +65,19 @@ def create_funcionario(db: Session, funcionario_data: FuncionarioDefesaCivilCrea
     db.add(db_funcionario)
     db.commit()
     db.refresh(db_funcionario)
-    return db_usuario
+    
+    funcionario = FuncionarioResponse(
+        id=db_usuario.id,
+        nome=db_usuario.nome,
+        data_nascimento=db_usuario.data_nascimento,
+        cpf=db_usuario.cpf,
+        email=db_usuario.email,
+        admin=db_usuario.admin,
+        user_id=db_usuario.id,
+        cargo=db_funcionario.cargo,
+        nivel_acesso=db_funcionario.nivel_acesso
+    )
+    return funcionario
 
 # Get user by id
 def get_usuario(db: Session, usuario_id: int):

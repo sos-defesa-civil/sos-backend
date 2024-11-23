@@ -39,22 +39,18 @@ class CidadaoCreate(CidadaoBase):
 class CidadaoUpdate(CidadaoBase):
     senha: str
 
-class FuncionarioDefesaCivilBase(UsuarioBase):
+class FuncionarioBase(UsuarioBase):
     cargo: str
     nivel_acesso: str
 
     class Config:
         from_attributes = True  # Allows interaction with SQLAlchemy objects
 
-class FuncionarioDefesaCivilCreate(FuncionarioDefesaCivilBase):
+class FuncionarioCreate(FuncionarioBase):
     senha: str
 
-class FuncionarioDefesaCivilUpdate(FuncionarioDefesaCivilBase):
+class FuncionarioUpdate(FuncionarioBase):
     senha: str
 
-class FuncionarioResponse(FuncionarioDefesaCivilBase):
+class FuncionarioResponse(FuncionarioBase):
     id: int  # Ensure `id` field is included if it's returned
-
-class Login(BaseModel):
-    email: str
-    senha: str
