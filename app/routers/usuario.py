@@ -173,7 +173,7 @@ async def login(
 
 # Get all users with pagination
 @router.get(
-    "/usuario/",
+    "/",
     response_model=list[UsuarioResponse],
     summary="Obter todos os usuários",
     description=(
@@ -187,7 +187,7 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
 # Update a user
 
-@router.put("/usuario/{usuario_id}", 
+@router.put("/{usuario_id}", 
     response_model=UsuarioResponse,
     summary="Atualizar um usuário", 
     description="Atualiza os dados de um usuário existente com base no ID fornecido.",
@@ -208,7 +208,7 @@ def update_user(usuario_id: int, usuario: UsuarioUpdate, db: Session = Depends(g
     return update_usuario(db, usuario_id, usuario)
 
 # Delete a user
-@router.delete("/usuario/{usuario_id}",
+@router.delete("/{usuario_id}",
     response_model=UsuarioResponse,
     summary="Deletar um usuário", 
     description="Deleta os dados de um usuário existente com base no ID fornecido.",
