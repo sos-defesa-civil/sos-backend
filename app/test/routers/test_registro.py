@@ -1,7 +1,7 @@
 from datetime import datetime
 from app.models.usuario import Usuario, Cidadao, Funcionario_Defesa_Civil
 from app.models.registro import Registro
-from app.cruds.registro import create_log, get_logs
+from app.repositories.registro import create_log, get_logs
 
 import pytest
 

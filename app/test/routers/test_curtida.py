@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.cruds.curtida import create_curtida, delete_curtida
+from app.repositories.curtida import create_curtida, delete_curtida
 from app.models.curtida import Curtida
 from app.schemas.curtida import CurtidaCreate
 

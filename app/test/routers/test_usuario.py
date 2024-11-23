@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.models.usuario import Usuario, Cidadao, Funcionario_Defesa_Civil
 from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, CidadaoCreate, FuncionarioDefesaCivilCreate
-from app.cruds.usuario import (
+from app.repositories.usuario import (
     create_cidadao, create_funcionario, get_usuario, get_usuarios, 
     update_usuario, delete_usuario, create_base_usuario
 )

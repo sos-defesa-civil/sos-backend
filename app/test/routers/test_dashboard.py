@@ -6,7 +6,7 @@ from app.database import Base
 from app.models.ocorrencia import Ocorrencia
 from app.models.curtida import Curtida
 from app.models.session_data import SessionData
-from app.cruds.dashboard import (
+from app.repositories.dashboard import (
     get_session_data,
     get_ocorrencia_data,
     get_curtida_data,
