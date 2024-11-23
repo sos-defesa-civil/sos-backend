@@ -7,8 +7,8 @@ class Usuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(255))
     data_nascimento = Column(DateTime)
-    cpf = Column(String(14))
-    email = Column(String(100))
+    cpf = Column(String(14), unique=True)
+    email = Column(String(100), unique=True)
     senha = Column(String(255))
     admin = Column(Boolean, default=False)
 

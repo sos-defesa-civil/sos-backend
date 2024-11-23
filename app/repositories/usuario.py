@@ -3,6 +3,7 @@ from app.models.usuario import Usuario, Cidadao, Funcionario_Defesa_Civil
 from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, CidadaoCreate, CidadaoResponse, FuncionarioCreate, FuncionarioResponse
 from app.auth.password import hash_password
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 
 
@@ -16,9 +17,19 @@ def create_base_usuario(db: Session, usuario_data: UsuarioCreate) -> Usuario:
         senha=hash_password(usuario_data.senha),  # You should hash the password here
         admin=usuario_data.admin,
     )
-    db.add(db_usuario)
-    db.commit()
-    db.refresh(db_usuario)
+    try:
+        db.add(db_usuario)
+        db.commit()
+        db.refresh(db_usuario)
+    except IntegrityError as e:
+        db.rollback()  # Rollback the transaction to avoid breaking subsequent operations
+        # Check the type of integrity error
+        if "cpf" in str(e.orig).lower():
+            raise HTTPException(status_code=400, detail="CPF already exists")
+        elif "email" in str(e.orig).lower():
+            raise HTTPException(status_code=400, detail="Email already exists")
+        else:
+            raise HTTPException(status_code=400, detail="An error occurred while creating the user")
 
     return db_usuario
 

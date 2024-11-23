@@ -24,7 +24,19 @@ router = APIRouter()
         "1. Recebe os dados do cidadão fornecidos no corpo da requisição.\n"
         "2. Cria um novo registro no banco de dados.\n"
         "3. Retorna os dados do cidadão recém-criado no formato do modelo `UsuarioResponse`."
-    )
+    ),
+    responses={
+        400: {
+            "description": "Erro de validação (CPF ou Email já existe)",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "CPF already exists"
+                    }
+                }
+            }
+        }
+    }
 )
 def create_cidadao_endpoint(cidadao: CidadaoCreate, db: Session = Depends(get_db)):
     return create_cidadao(db, cidadao)
@@ -44,7 +56,19 @@ def create_cidadao_endpoint(cidadao: CidadaoCreate, db: Session = Depends(get_db
         "1. Recebe os dados do funcionário fornecidos no corpo da requisição.\n"
         "2. Cria um novo registro no banco de dados.\n"
         "3. Retorna os dados do funcionário recém-criado no formato do modelo `UsuarioResponse`."
-    )
+    ),
+    responses={
+        400: {
+            "description": "Erro de validação (CPF ou Email já existe)",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "CPF already exists"
+                    }
+                }
+            }
+        }
+    }
 )
 def create_funcionario_endpoint(funcionario: FuncionarioCreate, db: Session = Depends(get_db)):
     return create_funcionario(db, funcionario)
