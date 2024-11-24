@@ -7,11 +7,11 @@ from app.database import SessionLocal, Base, engine
 
 client = TestClient(app)
 
-usuario_data = data_teste.usuario_token()
+usuario_data = data_teste.usuario_token_ocorrencia()
 response_usuario = client.post("/api/cidadao/", json=usuario_data)
 
 # Get Login token
-response = client.post("/api/login/", data={"username": "test@example.com", "password": "password"})
+response = client.post("/api/login/", data={"username": "test_ocorrencia@example.com", "password": "password"})
 token = response.json()["access_token"]
 
 def test_create_ocorrencia():
@@ -58,7 +58,7 @@ def test_delete_ocorrencia():
     response = client.get(f"/api/ocorrencia/{id_ocorrencia}", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 404  
 
-    client.delete(f"/api/{response_usuario.json()["id"]}")
+    # client.delete(f"/api/{response_usuario.json()["id"]}")
 
     
 

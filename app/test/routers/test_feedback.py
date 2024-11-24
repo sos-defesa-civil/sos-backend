@@ -8,12 +8,12 @@ from datetime import datetime
 client = TestClient(app)
 
 ## Criação de usuário de teste
-usuario_data = data_teste.usuario_token()
+usuario_data = data_teste.usuario_token_feedback()
 response = client.post("/api/cidadao/", json=usuario_data)
 user_id = response.json()["id"]
 
 # Get Login token
-response = client.post("/api/login/", data={"username": "test@example.com", "password": "password"})
+response = client.post("/api/login/", data={"username": "test_feedback@example.com", "password": "password"})
 token = response.json()["access_token"]
 
 def create_ocorrencia():
