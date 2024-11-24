@@ -114,6 +114,17 @@ def add_curtida_route(curtida: CurtidaCreate, db: Session = Depends(get_db)):
 
     return curtida
 
+@router.delete("/ocorrencia/{ocorrencia_id}/curtidas/{curtida_id}", 
+    response_model=CurtidaResponse,
+    summary="Deletar curtida",
+    description="Deleta uma curtida de uma ocorrência específica.")
+def delete_curtida_route(curtida_id: int, ocorrencia_id: int, db: Session = Depends(get_db)):
+    db_curtida = delete_curtida(db, curtida_id)
+
+    if db_curtida is None:
+        raise HTTPException(status_code=404, detail="Curtida not found")
+    
+    return db_curtida
 
 @router.post("/ocorrencia/{ocorrencia_id}/finalizar", 
     response_model=OcorrenciaResponse,
