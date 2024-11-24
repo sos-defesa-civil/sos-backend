@@ -49,6 +49,12 @@ def get_midia(db: Session, midia_id: int) -> Midia:
 def delete_midia(db: Session, midia_id: int) -> Midia:
     db_midia = db.query(Midia).filter(Midia.id == midia_id).first()
     if db_midia:
+
+        if os.path.exists(db_midia.caminho):
+            os.remove(db_midia.caminho)
+        
+        # Delete the record from the database
         db.delete(db_midia)
         db.commit()
+    
     return db_midia
