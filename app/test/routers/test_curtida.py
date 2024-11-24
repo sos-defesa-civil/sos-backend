@@ -1,30 +1,68 @@
+import pytest
+import data_test
 from datetime import datetime
-from app.repositories.curtida import create_curtida, delete_curtida
-from app.models.curtida import Curtida
-from app.schemas.curtida import CurtidaCreate
+#from app.repositories.curtida import create_curtida, delete_curtida
+#from app.models.curtida import Curtida
+#from app.schemas.curtida import CurtidaCreate
+from fastapi.testclient import TestClient
+from app.main import app
+from app.database import SessionLocal
 
-def test_create_curtida(db):
-    # Configuração do objeto CurtidaCreate com um id fictício
-    curtida_data = CurtidaCreate(id=1, user_id=1, oc_id=1, data_registro=datetime.now())
-    
-    # Chama a função de criação
-    curtida = create_curtida(db, curtida=curtida_data)
-    
-    # Verifica se o retorno não é None e se o id foi criado
-    assert curtida is not None
-    assert curtida.id is not None
-    assert curtida.user_id == curtida_data.user_id
-    assert curtida.oc_id == curtida_data.oc_id
+client = TestClient(app)
 
-def test_delete_curtida(db):
-    # Adiciona uma curtida para testar a exclusão
-    curtida_data = CurtidaCreate(id=1, user_id=1, oc_id=1, data_registro=datetime.now())
-    curtida = create_curtida(db, curtida=curtida_data)
+# @pytest.fixture(scope="module")
+# def setup_db():
+#     db = SessionLocal()
+#     yield db
+#     db.close()
+
+usuario_data = data_test.usuario_token()
+# Create Usuario
+response = client.post("/api/cidadao/", json=usuario_data)
+id = response.json()["id"]
+
+# Get Login token
+response = client.post("/api/login/", data={"username": "test@example.com", "password": "password"})
+token = response.json()["access_token"]
+
+def create_ocorrencia():
+    ocorrencia_data = data_test.ocorrencia_alagamento()
     
-    # Chama a função de exclusão
-    deleted_curtida = delete_curtida(db, curtida_id=curtida.id)
+    response = client.post("api/ocorrencia/", json=ocorrencia_data, headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    assert response.json()["descricao"] == ocorrencia_data["descricao"]
+
+    return response.json()["id"]
+
+id_ocorrencia = create_ocorrencia()
+
+def test_create_curtida():
+    curtida_data = {
+                    'user_id': id,
+                    'oc_id': id_ocorrencia,
+                    'data_registro': '2024-10-24T14:00:00'}
+
+    response = client.post(f"api/ocorrencia/{id_ocorrencia}/curtidas/", json=curtida_data)
+
+    assert response.status_code == 200
+    return response.json()['id']
+
+id_curtida = test_create_curtida()
+
+def test_delete_curtida():
+    response = client.delete(f"api/ocorrencia/{id_ocorrencia}/curtidas/{id_curtida}", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+
+# def test_delete_curtida(db):
+#     # Adiciona uma curtida para testar a exclusão
+#     curtida_data = CurtidaCreate(id=1, user_id=1, oc_id=1, data_registro=datetime.now())
+#     curtida = create_curtida(db, curtida=curtida_data)
     
-    # Verifica se a curtida foi excluída corretamente
-    assert deleted_curtida is not None
-    assert deleted_curtida.id == curtida.id
-    assert db.query(Curtida).filter(Curtida.id == curtida.id).first() is None
+#     # Chama a função de exclusão
+#     deleted_curtida = delete_curtida(db, curtida_id=curtida.id)
+    
+#     # Verifica se a curtida foi excluída corretamente
+#     assert deleted_curtida is not None
+#     assert deleted_curtida.id == curtida.id
+#     assert db.query(Curtida).filter(Curtida.id == curtida.id).first() is None

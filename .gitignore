@@ -163,3 +163,4 @@ cython_debug/
 
 # slqlite DB
 *.db
+midias/
