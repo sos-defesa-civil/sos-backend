@@ -1,30 +1,15 @@
 import pytest
+import data_test
 from fastapi.testclient import TestClient
 from app.main import app
-from app.database import SessionLocal
+from app.database import SessionLocal, Base, engine
+
 
 client = TestClient(app)
 
-@pytest.fixture(scope="module")
-def setup_db():
-    db = SessionLocal()
-    yield db
-    db.close()
-
-usuario_data = {
-        "nome": "Test User",
-        "data_nascimento": "2000-01-01",
-        "cpf": "12345678901",
-        "email": "test@example.com",
-        "senha": "password",
-        "admin": False,
-        "endereco": "123 Test St",
-        "num_ocorrencias_registradas": 0,
-        "telefone": "1234567890",
-        "celular": "0987654321"
-    }
+usuario_data = data_test.usuario_token()
 # Create Usuario
-client.post("/api/cidadao/", json=usuario_data)
+response_usuario = client.post("/api/cidadao/", json=usuario_data)
 
 # Get Login token
 response = client.post("/api/login/", data={"username": "test@example.com", "password": "password"})
@@ -32,48 +17,55 @@ token = response.json()["access_token"]
 
 
 def test_create_ocorrencia():
-    ocorrencia_data = {
-    "tipo": "alagamentos",
-    "bairro": "bairro1",
-    "descricao": "Incident description tipo 3",
-    "data_registro": "2024-10-01T13:00:00",
-    "ultima_atualizacao": "2024-10-24T14:00:00",
-    "user_id": 1,
-    "latitude": 40.73061,
-    "longitude": -73.935242
-    }
+    ocorrencia_data = data_test.ocorrencia_alagamento()
     
     response = client.post("api/ocorrencia/", json=ocorrencia_data, headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 200
     assert response.json()["descricao"] == ocorrencia_data["descricao"]
+    client.delete(f"api/ocorrencia/{response.json()["id"]}", headers={"Authorization": f"Bearer {token}"})
+    # return response.json()["id"]
 
-    return response.json()["id"]
-
-id_ocorrencia = test_create_ocorrencia()
+# id_ocorrencia = test_create_ocorrencia()
+# id_ocorrencia = client.get(f"api/ocorrencia/list")
+# print(id_ocorrencia)
+# id_ocorrencia = id_ocorrencia.json()["results"][-1]["id"]
 
 def test_read_ocorrencia():
+    ocorrencia_data = data_test.ocorrencia_alagamento()
+    response = client.post("api/ocorrencia/", json=ocorrencia_data, headers={"Authorization": f"Bearer {token}"})
+    id_ocorrencia = response.json()["id"]
+
     response = client.get(f"api/ocorrencia/{id_ocorrencia}")
     assert response.status_code == 200
     assert "descricao" in response.json()
+    client.delete(f"api/ocorrencia/{response.json()["id"]}", headers={"Authorization": f"Bearer {token}"})
 
 def test_update_ocorrencia():
-    ocorrencia_update = {
-        "tipo": "alagamentos",
-        "bairro": "bairro1",
-        "descricao": "Updated",
-        "data_registro": "2024-10-01T13:00:00",
-        "ultima_atualizacao": "2024-10-24T14:00:00",
-        "user_id": 1,
-        "latitude": 40.73061,
-        "longitude": -73.935242
-    }
+    ocorrencia_update = data_test.ocorrencia_alagamento()
+    response = client.post("api/ocorrencia/", json=ocorrencia_update, headers={"Authorization": f"Bearer {token}"})
+    id_ocorrencia = response.json()["id"]
 
+    ocorrencia_update["descricao"] = "Updated"
     response = client.put(f"api/ocorrencia/{id_ocorrencia}", json=ocorrencia_update, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     assert response.json()["descricao"] == ocorrencia_update["descricao"]
+    client.delete(f"api/ocorrencia/{response.json()["id"]}", headers={"Authorization": f"Bearer {token}"})
 
 def test_delete_ocorrencia():
-    response = client.delete(f"api/ocorrencia/{id_ocorrencia}", headers={"Authorization": f"Bearer {token}"})
+    ocorrencia_update = data_test.ocorrencia_alagamento()
+    response = client.post("api/ocorrencia/", json=ocorrencia_update, headers={"Authorization": f"Bearer {token}"})
+    id_ocorrencia = response.json()["id"]
+
+    # Testa a exclusão
+    response = client.delete(f"/api/ocorrencia/{id_ocorrencia}", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
+
+    # Verifica se a ocorrência foi removida
+    response = client.get(f"/api/ocorrencia/{id_ocorrencia}", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 404  
+
+    client.delete(f"/api/{response_usuario.json()["id"]}")
+
+    
 

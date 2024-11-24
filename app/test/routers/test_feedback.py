@@ -7,13 +7,7 @@ from datetime import datetime
 client = TestClient(app)
 
 # Configuração do banco de dados para os testes
-@pytest.fixture(scope="module")
-def db():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    yield db
-    db.close()
-    Base.metadata.drop_all(bind=engine)
+
 
 # Testar criação de feedback
 def test_create_feedback(db):

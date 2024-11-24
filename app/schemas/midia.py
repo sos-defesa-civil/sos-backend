@@ -4,7 +4,6 @@ from datetime import datetime
 
 class MidiaBase(BaseModel):
     tipo: str
-    caminho: str
     oc_id: int
 
     class Config:

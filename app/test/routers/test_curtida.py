@@ -1,4 +1,5 @@
 import pytest
+import data_test
 from datetime import datetime
 #from app.repositories.curtida import create_curtida, delete_curtida
 #from app.models.curtida import Curtida
@@ -9,24 +10,13 @@ from app.database import SessionLocal
 
 client = TestClient(app)
 
-@pytest.fixture(scope="module")
-def setup_db():
-    db = SessionLocal()
-    yield db
-    db.close()
+# @pytest.fixture(scope="module")
+# def setup_db():
+#     db = SessionLocal()
+#     yield db
+#     db.close()
 
-usuario_data = {
-        "nome": "Test User",
-        "data_nascimento": "2000-01-01",
-        "cpf": "12345678901",
-        "email": "test@example.com",
-        "senha": "password",
-        "admin": False,
-        "endereco": "123 Test St",
-        "num_ocorrencias_registradas": 0,
-        "telefone": "1234567890",
-        "celular": "0987654321"
-    }
+usuario_data = data_test.usuario_token()
 # Create Usuario
 response = client.post("/api/cidadao/", json=usuario_data)
 id = response.json()["id"]
@@ -36,16 +26,7 @@ response = client.post("/api/login/", data={"username": "test@example.com", "pas
 token = response.json()["access_token"]
 
 def create_ocorrencia():
-    ocorrencia_data = {
-    "tipo": "alagamentos",
-    "bairro": "bairro1",
-    "descricao": "Incident description tipo 3",
-    "data_registro": "2024-10-01T13:00:00",
-    "ultima_atualizacao": "2024-10-24T14:00:00",
-    "user_id": 1,
-    "latitude": 40.73061,
-    "longitude": -73.935242
-    }
+    ocorrencia_data = data_test.ocorrencia_alagamento()
     
     response = client.post("api/ocorrencia/", json=ocorrencia_data, headers={"Authorization": f"Bearer {token}"})
 

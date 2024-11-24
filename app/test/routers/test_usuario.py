@@ -1,4 +1,5 @@
 import pytest
+import data_test
 from datetime import datetime
 from fastapi.testclient import TestClient
 from app.main import app
@@ -7,18 +8,7 @@ client = TestClient(app)
 
 # Teste para criar um Cidadão
 def test_create_cidadao():
-    cidadao_data = {
-        "nome": "Ana Souza",
-        "data_nascimento": datetime(1985, 3, 20).isoformat(),
-        "cpf": "98765432100",
-        "email": "ana@example.com",
-        "senha": "senha_cidadao",
-        "admin": False,
-        "endereco": "Rua Principal, 123",
-        "num_ocorrencias_registradas": 0,
-        "telefone": "(11) 2345-6789",
-        "celular": "(11) 91234-5678"
-    }
+    cidadao_data = data_test.usuario_cidadao()
 
     response = client.post("/api/cidadao/", json=cidadao_data)
 
@@ -35,18 +25,12 @@ def test_create_cidadao():
     assert response.json()["telefone"] == "(11) 2345-6789"
     assert response.json()["celular"] == "(11) 91234-5678"
 
+    response = client.delete(f"/api/{response.json()["id"]}")
+
+
 # Teste para criar um Funcionário de Defesa Civil
 def test_create_funcionario():
-    funcionario_data = {
-        "nome": "Carlos Pereira",
-        "data_nascimento": datetime(1970, 8, 10).isoformat(),
-        "cpf": "11122233344",
-        "email": "carlos@example.com",
-        "senha": "senha_funcionario",
-        "admin": True,
-        "cargo": "Coordenador",
-        "nivel_acesso": "Alto"
-    }
+    funcionario_data = data_test.usuario_funcionario()
 
     response = client.post("/api/funcionario/", json=funcionario_data)
 
@@ -61,19 +45,10 @@ def test_create_funcionario():
     assert response.json()["cargo"] == "Coordenador"
     assert response.json()["nivel_acesso"] == "Alto"
     
-    return response.json()["id"]
+    response = client.delete(f"/api/{response.json()["id"]}")
 
 def create_funcionario():
-    funcionario_data = {
-        "nome": "José Silva",
-        "data_nascimento": datetime(1970, 8, 10).isoformat(),
-        "cpf": "11122233377",
-        "email": "js@example.com",
-        "senha": "senha_funcionario",
-        "admin": True,
-        "cargo": "Dev",
-        "nivel_acesso": "Alto"
-    }
+    funcionario_data = data_test.usuario_funcionario2()
 
     response = client.post("/api/funcionario/", json=funcionario_data)
     
@@ -87,6 +62,13 @@ def test_get_usuario():
     assert response.status_code == 200
     assert response.json()["id"] == id
 
+# Teste de login (verifica se a senha está hasheada e corresponde ao login)
+def test_login(): 
+    # Recuperar o usuário criado
+    response = client.post("/api/login/", data={"username": "js@example.com", "password": "senha_funcionario"})
+    # Verificações do status da resposta
+    assert response.status_code == 200
+
 # Teste para obter todos os usuários
 def test_get_usuarios():
     response = client.get("/api/")
@@ -98,14 +80,7 @@ def test_get_usuarios():
 
 # Teste para atualizar um usuário
 def test_update_usuario():
-    update_data = {
-        "nome": "João Silva Atualizado",
-        "data_nascimento": "1990-05-15",
-        "cpf": "12345678900",
-        "email": "joao_atualizado@example.com",
-        "senha": "nova_senha_segura",
-        "admin": True
-    }
+    update_data = data_test.usuario_update()
     response = client.put(f"/api/{id}", json=update_data)
 
     assert response.status_code == 200
@@ -113,6 +88,8 @@ def test_update_usuario():
     assert response.json()["nome"] == "João Silva Atualizado"
     assert response.json()["email"] == "joao_atualizado@example.com"
     assert response.json()["admin"] == True
+
+
 
 # Teste para deletar um usuário
 def test_delete_usuario():
@@ -131,10 +108,5 @@ def test_delete_usuario():
     assert response.status_code == 404  # Usuário não deve ser encontrado
  # Verifica se o usuário foi realmente deletado
 
-# Teste de login (verifica se a senha está hasheada e corresponde ao login)
-def test_login(): 
-    # Recuperar o usuário criado
-    response = client.post("/api/login/", data={"username": "ana@example.com", "password": "senha_cidadao"})
-    # Verificações do status da resposta
-    assert response.status_code == 200
+
 
