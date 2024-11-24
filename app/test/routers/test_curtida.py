@@ -1,23 +1,13 @@
 import pytest
-import data_test
+import app.test.routers.data_teste as data_teste
 from datetime import datetime
-#from app.repositories.curtida import create_curtida, delete_curtida
-#from app.models.curtida import Curtida
-#from app.schemas.curtida import CurtidaCreate
 from fastapi.testclient import TestClient
 from app.main import app
 from app.database import SessionLocal
 
 client = TestClient(app)
 
-# @pytest.fixture(scope="module")
-# def setup_db():
-#     db = SessionLocal()
-#     yield db
-#     db.close()
-
-usuario_data = data_test.usuario_token()
-# Create Usuario
+usuario_data = data_teste.usuario_token()
 response = client.post("/api/cidadao/", json=usuario_data)
 id = response.json()["id"]
 
@@ -26,7 +16,7 @@ response = client.post("/api/login/", data={"username": "test@example.com", "pas
 token = response.json()["access_token"]
 
 def create_ocorrencia():
-    ocorrencia_data = data_test.ocorrencia_alagamento()
+    ocorrencia_data = data_teste.ocorrencia_alagamento()
     
     response = client.post("api/ocorrencia/", json=ocorrencia_data, headers={"Authorization": f"Bearer {token}"})
 
@@ -53,16 +43,5 @@ id_curtida = test_create_curtida()
 def test_delete_curtida():
     response = client.delete(f"api/ocorrencia/{id_ocorrencia}/curtidas/{id_curtida}", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
-
-# def test_delete_curtida(db):
-#     # Adiciona uma curtida para testar a exclusão
-#     curtida_data = CurtidaCreate(id=1, user_id=1, oc_id=1, data_registro=datetime.now())
-#     curtida = create_curtida(db, curtida=curtida_data)
-    
-#     # Chama a função de exclusão
-#     deleted_curtida = delete_curtida(db, curtida_id=curtida.id)
-    
-#     # Verifica se a curtida foi excluída corretamente
-#     assert deleted_curtida is not None
-#     assert deleted_curtida.id == curtida.id
-#     assert db.query(Curtida).filter(Curtida.id == curtida.id).first() is None
+    client.delete(f"/api/{id}")
+    client.delete(f"/api/ocorrencia/{id_ocorrencia}", headers={"Authorization": f"Bearer {token}"})

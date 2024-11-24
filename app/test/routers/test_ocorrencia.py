@@ -1,5 +1,5 @@
 import pytest
-import data_test
+import app.test.routers.data_teste as data_teste
 from fastapi.testclient import TestClient
 from app.main import app
 from app.database import SessionLocal, Base, engine
@@ -7,17 +7,15 @@ from app.database import SessionLocal, Base, engine
 
 client = TestClient(app)
 
-usuario_data = data_test.usuario_token()
-# Create Usuario
+usuario_data = data_teste.usuario_token()
 response_usuario = client.post("/api/cidadao/", json=usuario_data)
 
 # Get Login token
 response = client.post("/api/login/", data={"username": "test@example.com", "password": "password"})
 token = response.json()["access_token"]
 
-
 def test_create_ocorrencia():
-    ocorrencia_data = data_test.ocorrencia_alagamento()
+    ocorrencia_data = data_teste.ocorrencia_alagamento()
     
     response = client.post("api/ocorrencia/", json=ocorrencia_data, headers={"Authorization": f"Bearer {token}"})
 
@@ -26,13 +24,8 @@ def test_create_ocorrencia():
     client.delete(f"api/ocorrencia/{response.json()["id"]}", headers={"Authorization": f"Bearer {token}"})
     # return response.json()["id"]
 
-# id_ocorrencia = test_create_ocorrencia()
-# id_ocorrencia = client.get(f"api/ocorrencia/list")
-# print(id_ocorrencia)
-# id_ocorrencia = id_ocorrencia.json()["results"][-1]["id"]
-
 def test_read_ocorrencia():
-    ocorrencia_data = data_test.ocorrencia_alagamento()
+    ocorrencia_data = data_teste.ocorrencia_alagamento()
     response = client.post("api/ocorrencia/", json=ocorrencia_data, headers={"Authorization": f"Bearer {token}"})
     id_ocorrencia = response.json()["id"]
 
@@ -42,7 +35,7 @@ def test_read_ocorrencia():
     client.delete(f"api/ocorrencia/{response.json()["id"]}", headers={"Authorization": f"Bearer {token}"})
 
 def test_update_ocorrencia():
-    ocorrencia_update = data_test.ocorrencia_alagamento()
+    ocorrencia_update = data_teste.ocorrencia_alagamento()
     response = client.post("api/ocorrencia/", json=ocorrencia_update, headers={"Authorization": f"Bearer {token}"})
     id_ocorrencia = response.json()["id"]
 
@@ -53,7 +46,7 @@ def test_update_ocorrencia():
     client.delete(f"api/ocorrencia/{response.json()["id"]}", headers={"Authorization": f"Bearer {token}"})
 
 def test_delete_ocorrencia():
-    ocorrencia_update = data_test.ocorrencia_alagamento()
+    ocorrencia_update = data_teste.ocorrencia_alagamento()
     response = client.post("api/ocorrencia/", json=ocorrencia_update, headers={"Authorization": f"Bearer {token}"})
     id_ocorrencia = response.json()["id"]
 

@@ -1,5 +1,5 @@
 import pytest
-import data_test
+import app.test.routers.data_teste as data_teste
 from datetime import datetime
 from fastapi.testclient import TestClient
 from app.main import app
@@ -8,7 +8,7 @@ client = TestClient(app)
 
 # Teste para criar um Cidadão
 def test_create_cidadao():
-    cidadao_data = data_test.usuario_cidadao()
+    cidadao_data = data_teste.usuario_cidadao()
 
     response = client.post("/api/cidadao/", json=cidadao_data)
 
@@ -27,10 +27,9 @@ def test_create_cidadao():
 
     response = client.delete(f"/api/{response.json()["id"]}")
 
-
 # Teste para criar um Funcionário de Defesa Civil
 def test_create_funcionario():
-    funcionario_data = data_test.usuario_funcionario()
+    funcionario_data = data_teste.usuario_funcionario()
 
     response = client.post("/api/funcionario/", json=funcionario_data)
 
@@ -48,7 +47,7 @@ def test_create_funcionario():
     response = client.delete(f"/api/{response.json()["id"]}")
 
 def create_funcionario():
-    funcionario_data = data_test.usuario_funcionario2()
+    funcionario_data = data_teste.usuario_funcionario2()
 
     response = client.post("/api/funcionario/", json=funcionario_data)
     
@@ -80,7 +79,7 @@ def test_get_usuarios():
 
 # Teste para atualizar um usuário
 def test_update_usuario():
-    update_data = data_test.usuario_update()
+    update_data = data_teste.usuario_update()
     response = client.put(f"/api/{id}", json=update_data)
 
     assert response.status_code == 200
@@ -88,8 +87,6 @@ def test_update_usuario():
     assert response.json()["nome"] == "João Silva Atualizado"
     assert response.json()["email"] == "joao_atualizado@example.com"
     assert response.json()["admin"] == True
-
-
 
 # Teste para deletar um usuário
 def test_delete_usuario():
@@ -107,6 +104,3 @@ def test_delete_usuario():
     response = client.get(f"/api/usuario/{id}")
     assert response.status_code == 404  # Usuário não deve ser encontrado
  # Verifica se o usuário foi realmente deletado
-
-
-
