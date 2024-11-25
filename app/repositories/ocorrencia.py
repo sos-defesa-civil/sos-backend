@@ -74,6 +74,7 @@ def get_ocorrencias_list(
     tipo: Optional[str], 
     data_inicio: Optional[str], 
     data_fim: Optional[str],
+    type: Optional[int],
     limit: int,
     offset: int
 ) -> OcorrenciaListResponse:
@@ -101,7 +102,8 @@ def get_ocorrencias_list(
     .group_by(
         Ocorrencia.id, 
         Usuario.nome, 
-        latest_feedback.c.last_status
+        latest_feedback.c.last_status,
+        Usuario.admin
     ).order_by(Ocorrencia.data_registro.desc())
 
     if bairro:
@@ -109,6 +111,12 @@ def get_ocorrencias_list(
 
     if tipo:
         base_query = base_query.filter(Ocorrencia.tipo == tipo)
+
+    if type is not None:
+        if type == 0:
+            base_query = base_query.filter(Usuario.admin == True)
+        elif type == 1:
+            base_query = base_query.filter(Usuario.admin == False)
 
     if data_inicio and data_fim:
         base_query = base_query.filter(Ocorrencia.data_registro.between(data_inicio, data_fim))
