@@ -171,6 +171,60 @@ async def login(
     
     return {"access_token": access_token, "token_type": "bearer"}
 
+@router.post(
+    "/login/web",
+    summary="Autenticar funcionário",
+    description=(
+        "Esta rota permite que um usuário faça login no sistema utilizando suas credenciais "
+        "(e-mail e senha). Se as credenciais forem válidas e o usuário for do tipo funcionario, um token JWT será retornado, que "
+        "pode ser usado para autenticação em outras rotas protegidas."
+        "\n\n"
+        "### Processos executados:\n"
+        "1. Verifica se o e-mail está registrado no sistema.\n"
+        "2. Valida se a senha fornecida está correta.\n"
+        "3. Checa se o usuário é funcionario.\n"
+        "4. Gera um token de acesso JWT para o usuário autenticado.\n"
+        "5. Salva os dados de sessão no banco de dados.\n"
+        "6. Retorna o token gerado."
+    ),
+    responses={
+        401: {
+            "description": "Erro de autenticação. O e-mail ou senha estão incorretos.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Incorrect email or password"}
+                }
+            },
+        },
+    },
+)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    db_usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
+
+    if db_usuario.admin == false:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User does not have permissions",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Check if user exists and if password is correct
+    if not db_usuario or not verify_password(form_data.password, db_usuario.senha):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Create a JWT token with the user's email
+    access_token = create_access_token(data={"sub": db_usuario.email})
+    create_session_data(db, db_usuario.id)
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
 # Get all users with pagination
 @router.get(
     "/",
