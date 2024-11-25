@@ -1,11 +1,11 @@
 from datetime import datetime
 
-def usuario_token():
+def usuario_token_ocorrencia():
     return {
-        "nome": "Test User",
+        "nome": "User Token Ocorrencia",
         "data_nascimento": "2000-01-01",
-        "cpf": "12345678901",
-        "email": "test@example.com",
+        "cpf": "13345678901",
+        "email": "test_ocorrencia@example.com",
         "senha": "password",
         "admin": False,
         "endereco": "123 Test St",
@@ -13,6 +13,35 @@ def usuario_token():
         "telefone": "1234567890",
         "celular": "0987654321"
     }
+
+def usuario_token_feedback():
+    return {
+        "nome": "User Token FeedBack",
+        "data_nascimento": "2000-01-01",
+        "cpf": "12345678901",
+        "email": "test_feedback@example.com",
+        "senha": "password",
+        "admin": False,
+        "endereco": "123 Test St",
+        "num_ocorrencias_registradas": 0,
+        "telefone": "1234567890",
+        "celular": "0987654321"
+    }
+
+def usuario_token_curtida():
+    return {
+        "nome": "User Token Curtida",
+        "data_nascimento": "2000-01-01",
+        "cpf": "14345678901",
+        "email": "test_curtida@example.com",
+        "senha": "password",
+        "admin": False,
+        "endereco": "123 Test St",
+        "num_ocorrencias_registradas": 0,
+        "telefone": "1234567890",
+        "celular": "0987654321"
+    }
+
 
 def usuario_cidadao():
     return{

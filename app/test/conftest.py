@@ -1,39 +1,34 @@
 # import pytest
+# from datetime import datetime
 # from fastapi.testclient import TestClient
-# from sqlalchemy import create_engine
-# from sqlalchemy.orm import sessionmaker
 # from app.main import app
-# from app.database import Base, get_db
-
-# # Configura um banco de dados em memória para testes
-# SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-# engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-# TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# # Cria as tabelas no banco de dados de teste
-
-
-# # Fixture para uma sessão de banco de dados
-# @pytest.fixture(scope="module")
-# def db():
-#     Base.metadata.create_all(bind=engine)
-#     db = TestingSessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-#         Base.metadata.drop_all(bind=engine)
+# from app.database import Base, engine, SessionLocal
+# import app.test.routers.data_teste as data_teste
 
 # # Fixture para o cliente de teste
-# @pytest.fixture(scope="module")
+# @pytest.fixture(scope="function")
 # def client():
-#     def override_get_db():
-#         db = TestingSessionLocal()
-#         try:
-#             yield db
-#         finally:
-#             db.close()
+#     return TestClient(app)
 
-#     app.dependency_overrides[get_db] = override_get_db
-#     with TestClient(app) as c:
-#         yield c
+# # Fixture para resetar o banco antes de cada teste
+# @pytest.fixture(scope="function", autouse=True)
+# def reset_database():
+#     Base.metadata.drop_all(bind=engine)
+#     Base.metadata.create_all(bind=engine)
+
+# @pytest.fixture(scope="function")
+# def usuario_token(client):
+#     usuario_data = data_teste.usuario_token()
+#     response = client.post("/api/cidadao/", json=usuario_data)
+#     assert response.status_code == 200
+#     return response.json()
+
+# # Fixture para obter o token de autenticação de um usuário
+# @pytest.fixture(scope="function")
+# def auth_token(client, usuario_token):
+    
+
+#     login_data = {"username": usuario_token["email"], "password": usuario_token["senha"]}
+#     response = client.post("/api/login/", data=login_data)
+#     assert response.status_code == 200
+#     return response.json()["access_token"]
