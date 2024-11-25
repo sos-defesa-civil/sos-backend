@@ -44,6 +44,7 @@ def read_ocorrencias_map_route(
     description="""Retorna uma lista paginada de ocorrências com filtros opcionais. 
                 Os parâmetros `bairro` e `tipo` permitem filtrar as ocorrências pelo bairro e tipo de ocorrência, 
                 enquanto `dataInicio` e `dataFim` delimitam o intervalo de tempo (formato YYYY-MM-DD). 
+                O parâmetro `type` filtra por tipo de usuário (0 = admin, 1 = cidadão).
                 Os parâmetro `limit` e `offset`, permitem o controle a da paginação,
                 um define o limite por pagina e o outro a ocorrência inicial, respectivamente
                 <br/><br/>
@@ -69,11 +70,11 @@ def read_ocorrencias_list_route(
     tipo: Optional[str] = None,
     data_inicio: Optional[str] = Query(None, alias="dataInicio"),
     data_fim: Optional[str] = Query(None, alias="dataFim"),
+    type: Optional[int] = None,
     limit: int = 10,
     offset: int = 0):
-
     
-    return get_ocorrencias_list(db, bairro, tipo, data_inicio, data_fim, limit, offset)
+    return get_ocorrencias_list(db, bairro, tipo, data_inicio, data_fim, type, limit, offset)
 
 @router.get("/ocorrencia/{ocorrencia_id}", 
     response_model=OcorrenciaResponse,

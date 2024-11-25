@@ -17,7 +17,7 @@ def get_logs(db: Session):
     query = db.query(
         Registro,
         Usuario.nome.label('nome')
-    ).join(Usuario, Registro.user_id == Usuario.id)
+    ).join(Usuario, Registro.user_id == Usuario.id).order_by(Registro.data.desc())
 
     results = query.all()
     
